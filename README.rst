@@ -18,4 +18,4 @@ testing:
   
 To deploy to App Engine:  
 
-    $ appcfg.sh update war
+    $ lein appengine-update house-the-homeless
