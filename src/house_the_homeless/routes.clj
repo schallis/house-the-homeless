@@ -12,6 +12,7 @@
 ;; TODO investigate exception handling in Clojure (i.e. for integer
 ;; conversion)
 ;; TODO investigate auto-increment in gae (for user ids etc.)
+;; TODO filter "My Clients" based on author
 
 ;;
 ;;
@@ -48,6 +49,12 @@
   []
   (and (ui/user-logged-in?) (ui/user-admin?)))
 
+
+(defn link-client
+  "Create a link from a client entity"
+  [client]
+  (link-to (str "/client/" (:firstname client)) (:firstname client)))
+
 ;;
 ;;
 ;; Templates
@@ -77,7 +84,8 @@
 (defpartial layout [title & content]
   (html5
      [:head
-      [:title title]]
+      [:title title]
+      (include-css "/css/main.css")]
      [:body
       [:h1 "House the Homeless"]
       (side-bar)
@@ -153,7 +161,13 @@
           (let [clients (ds/query :kind Client)]
             (html
              [:p (link-to "/client/new" "Add new client")]
-             (ordered-list (map #(:firstname %) clients))))))
+             (ordered-list (map link-client clients))))))
+
+(defpage "/client/:id" {id :id}
+  (let [[client] (ds/query :kind Client :filter (= :firstname id))]
+    (layout (:firstname client)
+            (html
+             [:p (:firstname client)]))))
 
 (defpage "/client/new" {code :code :as client}
   (layout "New Client"
