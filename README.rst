@@ -10,12 +10,15 @@ House the Homeless
 Installation and Usage
 ======================
 
-If you are already setup with Lein, then the following should work for
-testing:  
+If you have the correct version of Leiningen installed, getting
+started should be as simple as pulling in dependancies and building::
 
-    $ lein deps  
+    $ lein deps
     $ lein appengine-prepare  
   
-To deploy to App Engine:  
+To deploy to App Engine::
 
     $ lein appengine-update house-the-homeless
+
+Note that the config files in the `war` directory must be changed so
+that the application is uploaded to your own App Engine account.
