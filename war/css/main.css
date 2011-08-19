@@ -1,3 +1,44 @@
+html {
+    font-family: "Helvetica", "Arial", sans-serif;
+}
+
+a {
+    color: #4183C4;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+header {
+    display: block;
+}
+
+div#sidebar {
+    display: block;
+    float: left;
+    width: 300px;
+}
+
+div#main {
+    display: block;
+    float: left;
+}
+
 p.error {
     color: #f00;
+}
+
+table tr td {
+    display: block;
+}
+
+label {
+    display: block;
+}
+
+input[type='text'] {
+    font-size: 1.25em;
+    padding: 0.2em;
 }

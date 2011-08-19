@@ -2,7 +2,8 @@
   (:use noir.core
         hiccup.core
         hiccup.page-helpers
-        hiccup.form-helpers)
+        hiccup.form-helpers
+        [clojure.pprint :only [pprint]])
   (:require [noir.response :as resp]
             [noir.validation :as vali]
             [appengine-magic.services.user :as ui]
@@ -22,7 +23,18 @@
 
 (ds/defentity Code [^:key content])
 (ds/defentity Event [^:key content])
-(ds/defentity Client [^:key firstname])
+(ds/defentity Client [firstname
+                      lastname
+                      dob
+                      ethnicity
+                      nationality
+                      ;; home-number
+                      ;; mobile-number
+                      ;; email
+                      ;; marital-status
+                      ;; ni-number
+                      ;;case-notes
+                      terms])
 (ds/defentity Stay [^:key date])
 
 ;;
@@ -30,6 +42,17 @@
 ;; Utilities
 ;;
 ;;
+
+(def ethnicities
+  ["White"
+   "African"
+   "Asian"
+   "Other"])
+
+(defn full-name
+  "Take a client entity and return the full name as a string"
+  [client]
+  (str (:firstname client) " " (:lastname client)))
 
 (defn gen-code
   "Generate a random unique code"
@@ -54,7 +77,12 @@
 (defn link-client
   "Create a link from a client entity"
   [client]
-  (link-to (str "/client/" (:firstname client)) (:firstname client)))
+  (link-to (str "/client/" (ds/key-id client)) (full-name client)))
+
+(defn parse-int
+  [string]
+  (try (. Integer parseInt string)
+       (catch Exception e nil)))
 
 ;;
 ;;
@@ -88,11 +116,12 @@
     [:title title]
     (include-css "/css/main.css")]
    [:body
-    [:h1 "House the Homeless"]
+    [:header [:h1 "House the Homeless"]]
     (side-bar)
     (html
-     [:h2 title]
-     content)]))
+     [:div#main
+      [:h2 title]
+      content])]))
 
 (defpartial error-item [[first-error]]
   [:p.error first-error])
@@ -104,30 +133,66 @@
 ;;
 
 (defpartial code-field [code]
-  (vali/on-error :code error-item)
-  (label "code" "Code: ")
-  (text-field "code" code))
+  [:tr [:td
+        (vali/on-error :code error-item)
+        (label "code" "Code: ")
+        (text-field "code" code)]])
 
-(defpartial user-fields [{:keys [firstname lastname]}]
-  (vali/on-error :firstname error-item)
-  (label "firstname" "First name: ")
-  (text-field "firstname" firstname)
-  (vali/on-error :lastname error-item)
-  (label "lastname" "Last name: ")
-  (text-field "lastname" lastname))
+;; dob
+;;                       ethnicity
+;;                       nationality
+;;                       home-number
+;;                       mobile-number
+;;                       email
+;;                       marital-status
+;;                       ni-number
+;;                       case-notes
 
-(defn valid? [{:keys [code firstname lastname]}]
+(defpartial user-fields [{:keys [firstname lastname dob ethnicity
+                                 nationality]}]
+   [:tr [:td
+         (vali/on-error :firstname error-item)
+         (label "firstname" "First name: ")
+         (text-field "firstname" firstname)]]
+   [:tr [:td
+    (vali/on-error :lastname error-item)
+    (label "lastname" "Last name: ")
+    (text-field "lastname" lastname)]]
+   [:tr [:td
+    (vali/on-error :dob error-item)
+    (label "dob" "Date of Birth: ")
+    (text-field "dob" dob)]]
+   [:tr [:td
+    (vali/on-error :ethnicity error-item)
+    (label "dob" "Ethnicity: ")
+    (drop-down "ethnicity" ethnicities ethnicity)]]
+   [:tr [:td
+    (vali/on-error :nationality error-item)
+    (label "nationality" "Nationality: ")
+    (text-field "nationality" nationality)]])
+
+(defpartial terms-field [terms]
+  [:tr [:td
+        (vali/on-error :terms error-item)
+        (label "terms" "Do you accept the terms and conditions? ")
+        (check-box "terms" terms)]])
+
+(defn valid? [{:keys [code firstname lastname dob terms]}]
   (if (not (is-admin?))
-    (or
+    (loop []
      ;; TODO check for valid format
      (vali/rule (code-issued? code)
                 [:code "That code is not valid"])
      (vali/rule (vali/has-value? code)
-                [:code "You must supply a code"])))
+                [:code "You must supply a code"])
+     (vali/rule (vali/has-value? terms)
+                [:terms "You must accept the terms and conditions"])))
   (vali/rule (vali/has-value? firstname)
              [:firstname "Your first supply a first name"])
   (vali/rule (vali/has-value? lastname)
              [:lastname "You must supply a last name"])
+  (vali/rule (vali/has-value? dob)
+             [:dob "You must supply a date of birth"])
   (not (vali/errors? :code :lastname :firstname)))
 
 ;;
@@ -166,24 +231,49 @@
              (ordered-list (map link-client clients))))))
 
 (defpage "/client/:id" {id :id}
-  (let [[client] (ds/query :kind Client :filter (= :firstname id))]
-    (layout (:firstname client)
+  (let [int-id (parse-int id)
+        client (ds/retrieve Client int-id)]
+    (layout (full-name client)
             (html
-             [:p (:firstname client)]))))
+             (link-to (str "/client/edit/" int-id) "Edit")
+             [:p (with-out-str (pprint client))]))))
 
-(defpage "/client/new" {code :code :as client}
+(defpage "/client/edit/:id" {id :id}
+  (let [int-id (parse-int id)
+        client (ds/retrieve Client int-id)]
+    (layout (full-name client)
+            (form-to [:post (str  "/client/edit/" int-id)]
+                   [:table
+                    (user-fields client)
+                    [:tr [:td
+                          (submit-button "Save")
+                          " or "
+                          (link-to (str "/client/" int-id) "Cancel")]]]))))
+
+(defpage "/client/new" {terms :terms code :code :as client}
   (layout "New Client"
           (form-to [:post "/client/new"]
-                   (if (not (is-admin?))
-                     (code-field code))
-                   (user-fields client)
-                   (submit-button "Add client"))))
+                   [:table
+                    (if (not (is-admin?))
+                      (code-field code))
+                    (user-fields client)
+                    (if (not (is-admin?))
+                      (terms-field terms))
+                    [:tr [:td
+                          (submit-button "Add client")
+                          " or "
+                          (link-to "/clients" "Cancel")]]])))
 
 (defpage [:post "/client/new"] {:as form}
   (if (valid? form)
     (loop []
       ;; TODO check for errors with insertion
-      (ds/save! (Client. (:firstname form)))
+      (ds/save! (Client. (:firstname form)
+                         (:lastname form)
+                         (:dob form)
+                         (:terms form)
+                         (:ethnicity form)
+                         (:nationality form)))
       (layout "New Client"
               [:p (str "Success!" form)]
               [:p (link-to "/clients" "View all clients")
