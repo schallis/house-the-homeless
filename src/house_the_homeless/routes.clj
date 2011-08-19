@@ -86,14 +86,24 @@
   (label "lastname" "Last name: ")
   (text-field "lastname" lastname))
 
+(defn code-issued? 
+  "Returns true if v is truthy and not an empty string."
+  [code]
+  (> (count
+      (ds/query :kind Code
+                :filter (= :content (Integer. code))))
+     0))
+
 (defn valid? [{:keys [code firstname lastname]}]
   (if (and (ui/user-logged-in?) (not (ui/user-admin?)))
-    (vali/rule (vali/min-length? code 1)
+    (vali/rule (code-issued? code)
+               [:code "That code is not valid"])
+    (vali/rule (vali/has-value? code)
                [:code "You must supply a code"]))
-  (vali/rule (vali/min-length? firstname 5)
-             [:firstname "Your first name must have more than 5 letters."])
+  (vali/rule (vali/has-value? firstname)
+             [:firstname "Your first supply a first name"])
   (vali/rule (vali/has-value? lastname)
-             [:lastname "You must have a last name"])
+             [:lastname "You must supply a last name"])
   (not (vali/errors? :code :lastname :firstname)))
 
 ;;
@@ -108,22 +118,28 @@
 (defpage "/welcome" []
   (layout "Welcome"))
 
-(defpage "/code/new" []
-  (layout "New Code"
-          (let [code (gen-code)
-                codes (ds/query :kind Code)]
-            (ds/save! (Code. code))
-            (html
-             [:p code]
-             [:p (link-to "/new-code" "Generate another")]
-             ))))
-
 (defpage "/codes" []
   (layout "Codes"
           (let [codes (ds/query :kind Code)]
             (html
              [:p (link-to "/new-code" "Generate new code")]
              (ordered-list (map #(:content %) codes))))))
+
+(defpage "/code/new" []
+  (layout "New Code"
+          (let [code (gen-code)]
+            (ds/save! (Code. code))
+            (html
+             [:p code]
+             [:p (link-to "/new-code" "Generate another")]
+             ))))
+
+(defpage "/clients" []
+  (layout "Clients"
+          (let [clients (ds/query :kind Client)]
+            (html
+             [:p (link-to "/new-client" "Add new client")]
+             (ordered-list (map #(:firstname %) clients))))))
 
 (defpage "/client/new" {code :code :as client}
   (layout "New Client"
@@ -136,5 +152,7 @@
 (defpage [:post "/client/new"] {:as form}
   (if (valid? form)
     (layout "New Client"
-     [:p (str "Success!" form)])
+            (ds/save! (Client. (:firstname form)))
+            [:p (str "Success!" form)]
+            [:p (link-to "/clients" "View all clients")])
     (render "/client/new" form)))
