@@ -8,6 +8,11 @@
             [appengine-magic.services.user :as ui]
             [appengine-magic.services.datastore :as ds]))
 
+;; TODO investigate reverse url lookup by function name (django style)
+;; TODO investigate exception handling in Clojure (i.e. for integer
+;; conversion)
+;; TODO investigate auto-increment in gae (for user ids etc.)
+
 ;;
 ;;
 ;; Entities
@@ -29,6 +34,20 @@
   []
   (rand-int 100))
 
+(defn code-issued? 
+  "Returns true if the specified code is found in the database"
+  [code]
+  (> (count
+      (ds/query
+       :kind Code
+       :filter (= :content (Integer. code))))
+     0))
+
+(defn is-admin?
+  "Returns true if the current user is logged in and admin"
+  []
+  (and (ui/user-logged-in?) (ui/user-admin?)))
+
 ;;
 ;;
 ;; Templates
@@ -45,10 +64,11 @@
        [:ul
         [:li (link-to "/clients" "My Clients")]
         [:li (link-to "/client/new" "New Client")]]]
-      [:li "Codes"
-       [:ul
-        [:li (link-to "/codes" "All Codes")]
-        [:li (link-to "/code/new" "New Code")]]]]
+      (if (is-admin?)
+        [:li "Codes"
+         [:ul
+          [:li (link-to "/codes" "All Codes")]
+          [:li (link-to "/code/new" "New Code")]]])]
      [:ul
       [:li "Not logged in"]
       [:li (link-to (ui/login-url) "Login")]]
@@ -86,20 +106,14 @@
   (label "lastname" "Last name: ")
   (text-field "lastname" lastname))
 
-(defn code-issued? 
-  "Returns true if v is truthy and not an empty string."
-  [code]
-  (> (count
-      (ds/query :kind Code
-                :filter (= :content (Integer. code))))
-     0))
-
 (defn valid? [{:keys [code firstname lastname]}]
-  (if (and (ui/user-logged-in?) (not (ui/user-admin?)))
-    (vali/rule (code-issued? code)
-               [:code "That code is not valid"])
-    (vali/rule (vali/has-value? code)
-               [:code "You must supply a code"]))
+  (if (not (is-admin?))
+    (or
+     ;; TODO check for valid format
+     (vali/rule (code-issued? code)
+                [:code "That code is not valid"])
+     (vali/rule (vali/has-value? code)
+                [:code "You must supply a code"])))
   (vali/rule (vali/has-value? firstname)
              [:firstname "Your first supply a first name"])
   (vali/rule (vali/has-value? lastname)
@@ -138,21 +152,25 @@
   (layout "Clients"
           (let [clients (ds/query :kind Client)]
             (html
-             [:p (link-to "/new-client" "Add new client")]
+             [:p (link-to "/client/new" "Add new client")]
              (ordered-list (map #(:firstname %) clients))))))
 
 (defpage "/client/new" {code :code :as client}
   (layout "New Client"
           (form-to [:post "/client/new"]
-            (if (and (ui/user-logged-in?) (not (ui/user-admin?)))
-              (code-field code))
-            (user-fields client)
-            (submit-button "Add client"))))
+                   (if (not (is-admin?))
+                     (code-field code))
+                   (user-fields client)
+                   (submit-button "Add client"))))
 
 (defpage [:post "/client/new"] {:as form}
   (if (valid? form)
-    (layout "New Client"
-            (ds/save! (Client. (:firstname form)))
-            [:p (str "Success!" form)]
-            [:p (link-to "/clients" "View all clients")])
+    (loop []
+      ;; TODO check for errors with insertion
+      (ds/save! (Client. (:firstname form)))
+      (layout "New Client"
+              [:p (str "Success!" form)]
+              [:p (link-to "/clients" "View all clients")
+               " or "
+               (link-to "/client/new" "Add another client")]))
     (render "/client/new" form)))
