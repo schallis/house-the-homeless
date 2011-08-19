@@ -23,6 +23,7 @@
 (ds/defentity Code [^:key content])
 (ds/defentity Event [^:key content])
 (ds/defentity Client [^:key firstname])
+(ds/defentity Stay [^:key date])
 
 ;;
 ;;
@@ -83,14 +84,15 @@
 
 (defpartial layout [title & content]
   (html5
-     [:head
-      [:title title]
-      (include-css "/css/main.css")]
-     [:body
-      [:h1 "House the Homeless"]
-      (side-bar)
-      [:h2 title]
-      content]))
+   [:head
+    [:title title]
+    (include-css "/css/main.css")]
+   [:body
+    [:h1 "House the Homeless"]
+    (side-bar)
+    (html
+     [:h2 title]
+     content)]))
 
 (defpartial error-item [[first-error]]
   [:p.error first-error])
