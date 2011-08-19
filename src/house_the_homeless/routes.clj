@@ -37,7 +37,7 @@
   (let [user (ui/current-user)]
     [:div#sidebar
      [:h3 "Current User"]
-     (if ui/user-logged-in?
+     (if (ui/user-logged-in?)
        [:ul
         [:li "Logged in as " (ui/current-user)]
         [:li (link-to (ui/logout-url) "Logout")]
@@ -96,7 +96,7 @@
   (text-field "lastname" lastname))
 
 (defn valid? [{:keys [code firstname lastname]}]
-  (if (true? 'false)
+  (if (and (ui/user-logged-in?) (not (ui/user-admin?)))
     (vali/rule (vali/min-length? code 1)
                [:code "You must supply a code"]))
   (vali/rule (vali/min-length? firstname 5)
@@ -108,7 +108,7 @@
 (defpage "/client/add" {code :code :as client}
   (layout "Add Client"
    (form-to [:post "/client/add"]
-            (if (true? 'false)
+            (if (and (ui/user-logged-in?) (not (ui/user-admin?)))
               (code-field code))
             (user-fields client)
             (submit-button "Add client"))))
