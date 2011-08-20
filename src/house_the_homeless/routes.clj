@@ -43,6 +43,11 @@
 ;;
 ;;
 
+(defn debug-client
+  "Print out the map representing a client"
+  [client]
+  (with-out-str (pprint client)))
+
 (def ethnicities
   ["White"
    "African"
@@ -193,7 +198,7 @@
              [:lastname "You must supply a last name"])
   (vali/rule (vali/has-value? dob)
              [:dob "You must supply a date of birth"])
-  (not (vali/errors? :code :lastname :firstname)))
+  (not (vali/errors? :code :lastname :firstname :dob :terms)))
 
 ;;
 ;;
@@ -236,19 +241,30 @@
     (layout (full-name client)
             (html
              (link-to (str "/client/edit/" int-id) "Edit")
-             [:p (with-out-str (pprint client))]))))
+             [:p (debug-client client)]))))
 
-(defpage "/client/edit/:id" {id :id}
+(defpage "/client/edit/:id" {posted :posted id :id :as env}
+  (let [int-id (parse-int id)
+        client (if (not posted)
+                 (ds/retrieve Client int-id)
+                 env)]
+    (layout (full-name client)
+            (form-to [:post (str "/client/edit/" int-id)]
+                     [:table
+                      (user-fields client)
+                      [:tr [:td
+                            (submit-button "Save")
+                            " or "
+                            (link-to (str "/client/" int-id) "Cancel")]]]))))
+
+(defpage [:post "/client/edit/:id"] {id :id :as form}
   (let [int-id (parse-int id)
         client (ds/retrieve Client int-id)]
-    (layout (full-name client)
-            (form-to [:post (str  "/client/edit/" int-id)]
-                   [:table
-                    (user-fields client)
-                    [:tr [:td
-                          (submit-button "Save")
-                          " or "
-                          (link-to (str "/client/" int-id) "Cancel")]]]))))
+    (if (valid? form)
+      (and
+       (ds/save! (conj client form))
+       (resp/redirect (str "/client/" int-id)))
+      (render "/client/edit/:id" (assoc form :posted 'true)))))
 
 (defpage "/client/new" {terms :terms code :code :as client}
   (layout "New Client"
