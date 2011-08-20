@@ -14,6 +14,10 @@
 ;; conversion)
 ;; TODO investigate auto-increment in gae (for user ids etc.)
 ;; TODO filter "My Clients" based on author
+;; TODO make hash more unique
+
+;; TEST client pages (non-valid inputs)
+;; TEST invalid codes (strings, integers, string-ints, symbols)
 
 ;;
 ;;
@@ -23,7 +27,9 @@
 
 (ds/defentity Code [^:key content])
 (ds/defentity Event [^:key content])
-(ds/defentity Client [firstname
+(ds/defentity Client [creator
+                      code
+                      firstname
                       lastname
                       dob
                       ethnicity
@@ -64,20 +70,35 @@
   []
   (rand-int 100))
 
+(defn code-correct-format?
+  [code]
+  (if (parse-int code)
+    'true
+    'false))
+
 (defn code-issued? 
   "Returns true if the specified code is found in the database"
   [code]
-  (> (count
-      (ds/query
-       :kind Code
-       :filter (= :content (Integer. code))))
-     0))
+  (if (parse-int code)
+    (> (count
+        (ds/query
+         :kind Code
+         :filter (= :content (parse-int code))))
+       0)
+    'false))
 
 (defn is-admin?
   "Returns true if the current user is logged in and admin"
   []
   (and (ui/user-logged-in?) (ui/user-admin?)))
 
+(defn current-user-email
+  "Return the email of the current user or nil"
+  []
+  (let [user (ui/current-user)]
+    (if user
+      (ui/get-email user)
+      nil)))
 
 (defn link-client
   "Create a link from a client entity"
@@ -86,8 +107,25 @@
 
 (defn parse-int
   [string]
-  (try (. Integer parseInt string)
+  (try (Integer. string)
        (catch Exception e nil)))
+
+(defn get-clients []
+  "Return a list of clients visible to the current user"
+  (if (is-admin?)
+    (ds/query :kind Client)
+    (try (ds/query :kind Client
+                   :filter (= :creator (current-user-email)))
+         (catch Exception e nil))))
+
+(defn get-client [pk]
+  "Return a list of clients visible to the current user"
+  (let [client (ds/retrieve Client pk)]
+    (if (is-admin?)
+      client
+      (and (= (current-user-email)
+              (:creator client))
+           client))))
 
 ;;
 ;;
@@ -115,18 +153,45 @@
       [:li (link-to (ui/login-url) "Login")]]
      )])
 
+(defpartial unauthorised []
+  (html5
+     [:head
+      [:title "Unauthorised"]
+      (include-css "/css/main.css")]
+     [:body
+      [:header [:h1 "Unauthorised"]]
+      [:p "You must log in before viewing this page"]]))
+
+;; Protected admin page template
 (defpartial layout [title & content]
+  (if (ui/user-logged-in?)
+    (html5
+     [:head
+      [:title title]
+      (include-css "/css/main.css")]
+     [:body
+      [:header [:h1 "House the Homeless"]]
+      (side-bar)
+      (html
+       [:div#main
+        [:h2 title]
+        content])])
+    ;; Unauthorised
+    (unauthorised)))
+  
+;; Unprotected welcome page
+(defpartial welcome []
   (html5
    [:head
-    [:title title]
+    [:title "Welcome"]
     (include-css "/css/main.css")]
    [:body
     [:header [:h1 "House the Homeless"]]
-    (side-bar)
     (html
      [:div#main
-      [:h2 title]
-      content])]))
+      [:h2 "Welcome"]
+      (side-bar)
+      [:p "Welcome"]])]))
 
 (defpartial error-item [[first-error]]
   [:p.error first-error])
@@ -143,9 +208,6 @@
         (label "code" "Code: ")
         (text-field "code" code)]])
 
-;; dob
-;;                       ethnicity
-;;                       nationality
 ;;                       home-number
 ;;                       mobile-number
 ;;                       email
@@ -185,15 +247,15 @@
 (defn valid? [{:keys [code firstname lastname dob terms]}]
   (if (not (is-admin?))
     (loop []
-     ;; TODO check for valid format
-     (vali/rule (code-issued? code)
+      ;; TODO check for valid format
+     (vali/rule (and (parse-int code) (code-issued? (parse-int code)))
                 [:code "That code is not valid"])
      (vali/rule (vali/has-value? code)
                 [:code "You must supply a code"])
      (vali/rule (vali/has-value? terms)
                 [:terms "You must accept the terms and conditions"])))
   (vali/rule (vali/has-value? firstname)
-             [:firstname "Your first supply a first name"])
+             [:firstname "Your must supply a first name"])
   (vali/rule (vali/has-value? lastname)
              [:lastname "You must supply a last name"])
   (vali/rule (vali/has-value? dob)
@@ -210,7 +272,10 @@
   (resp/redirect "/welcome"))
 
 (defpage "/welcome" []
-  (layout "Welcome"))
+  (welcome))
+
+(defpage "/unauthorised" []
+  (unauthorised))
 
 (defpage "/codes" []
   (layout "Codes"
@@ -225,25 +290,26 @@
             (ds/save! (Code. code))
             (html
              [:p code]
-             [:p (link-to "/new-code" "Generate another")]
-             ))))
+             [:p (link-to "/new-code" "Generate another")]))))
 
 (defpage "/clients" []
   (layout "Clients"
-          (let [clients (ds/query :kind Client)]
+          (let [clients (get-clients)]
             (html
              [:p (link-to "/client/new" "Add new client")]
              (ordered-list (map link-client clients))))))
 
 (defpage "/client/:id" {id :id}
   (let [int-id (parse-int id)
-        client (ds/retrieve Client int-id)]
-    (layout (full-name client)
+        client (get-client int-id)]
+    (if client
+      (layout (full-name client)
             (html
              (link-to (str "/client/edit/" int-id) "Edit")
-             [:p (debug-client client)]))))
+             [:p (debug-client client)]))
+    (render "/unauthorised"))))
 
-(defpage "/client/edit/:id" {posted :posted id :id :as env}
+(defpage "/client/edit/:id" {:keys [posted id] :as env}
   (let [int-id (parse-int id)
         client (if (not posted)
                  (ds/retrieve Client int-id)
@@ -266,7 +332,7 @@
        (resp/redirect (str "/client/" int-id)))
       (render "/client/edit/:id" (assoc form :posted 'true)))))
 
-(defpage "/client/new" {terms :terms code :code :as client}
+(defpage "/client/new" {:keys [terms code] :as client}
   (layout "New Client"
           (form-to [:post "/client/new"]
                    [:table
@@ -284,7 +350,9 @@
   (if (valid? form)
     (loop []
       ;; TODO check for errors with insertion
-      (ds/save! (Client. (:firstname form)
+      (ds/save! (Client. (current-user-email)
+                         (:code form) 
+                         (:firstname form)
                          (:lastname form)
                          (:dob form)
                          (:terms form)
