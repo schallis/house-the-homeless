@@ -22,3 +22,17 @@ To deploy to App Engine::
 
 Note that the config files in the `war` directory must be changed so
 that the application is uploaded to your own App Engine account.
+
+Interactive Development
+=======================
+
+The development process starts by launching `lein swank` or `lein
+repl`. You then need to compile `core.clj` and `routes.clj`. A test
+Jetty server can now be started to serve the application::
+
+    user> (ns house-the-homeless.core)
+    house-the-homeless.core> (require '[appengine-magic.core :as ae])
+    house-the-homeless.core> (ae/serve house-the-homeless-app)
+
+Any changes and recompilations of the code should be reflected
+immediately in the running application.
