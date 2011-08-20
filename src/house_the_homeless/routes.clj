@@ -1,8 +1,9 @@
 (ns house-the-homeless.routes
-  (:use noir.core
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers
+  (:use [noir.core :only [defpartial defpage render]]
+        [hiccup.core :only [html]]
+        [hiccup.page-helpers :only [link-to html5 include-css ordered-list]]
+        [hiccup.form-helpers :only [drop-down form-to label submit-button text-field
+                                    check-box]]
         [clojure.pprint :only [pprint]])
   (:require [noir.response :as resp]
             [noir.validation :as vali]
@@ -65,6 +66,11 @@
   [client]
   (str (:firstname client) " " (:lastname client)))
 
+(defn parse-int
+  [string]
+  (try (Integer. string)
+       (catch Exception e nil)))
+
 (defn gen-code
   "Generate a random unique code"
   []
@@ -105,11 +111,6 @@
   [client]
   (link-to (str "/client/" (ds/key-id client)) (full-name client)))
 
-(defn parse-int
-  [string]
-  (try (Integer. string)
-       (catch Exception e nil)))
-
 (defn get-clients []
   "Return a list of clients visible to the current user"
   (if (is-admin?)
@@ -137,7 +138,7 @@
   [:div#sidebar
    (if (ui/user-logged-in?)
      [:ul
-      [:li "Logged in as " (ui/current-user)]
+      [:li "Logged in as " (ui/current-user) (if (is-admin?) " (Admin)")]
       [:li (link-to (ui/logout-url) "Logout")]
       [:li "Clients"
        [:ul
@@ -150,7 +151,7 @@
           [:li (link-to "/code/new" "New Code")]]])]
      [:ul
       [:li "Not logged in"]
-      [:li (link-to (ui/login-url) "Login")]]
+      [:li (link-to (ui/login-url :destination "/admin") "Login")]]
      )])
 
 (defpartial unauthorised []
@@ -277,6 +278,10 @@
 (defpage "/unauthorised" []
   (unauthorised))
 
+(defpage "/admin" []
+  (layout "Admin"
+          [:p "Use the menu on the left to create clients and codes"]))
+
 (defpage "/codes" []
   (layout "Codes"
           (let [codes (ds/query :kind Code)]
@@ -355,9 +360,9 @@
                          (:firstname form)
                          (:lastname form)
                          (:dob form)
-                         (:terms form)
                          (:ethnicity form)
-                         (:nationality form)))
+                         (:nationality form)
+                         (:terms form)))
       (layout "New Client"
               [:p (str "Success!" form)]
               [:p (link-to "/clients" "View all clients")
