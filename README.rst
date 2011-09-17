@@ -27,12 +27,14 @@ Interactive Development
 =======================
 
 The development process starts by launching `lein swank` or `lein
-repl`. You then need to compile `core.clj` and `routes.clj`. A test
-Jetty server can now be started to serve the application::
+repl`. You then need to compile `core.clj`, `routes.clj`, and
+`app_servlet.clj`. A test Jetty server can then be started to serve
+the application::
 
     user> (ns house-the-homeless.core)
     house-the-homeless.core> (require '[appengine-magic.core :as ae])
     house-the-homeless.core> (ae/serve house-the-homeless-app)
 
-Any changes and recompilations of the code should be reflected
-immediately in the running application.
+By default, the application will be available at `localhost:8080`. Any
+changes and recompilations of the code should be reflected immediately
+in the running application.

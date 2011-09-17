@@ -1,12 +1,18 @@
 (ns house-the-homeless.routes
   (:use [noir.core :only [defpartial defpage render]]
         [hiccup.core :only [html]]
-        [hiccup.page-helpers :only [link-to html5 include-css ordered-list]]
-        [hiccup.form-helpers :only [drop-down form-to label submit-button text-field
+        [hiccup.page-helpers :only [link-to html5 include-css ordered-list unordered-list]]
+        [hiccup.form-helpers :only [drop-down form-to label submit-button text-field text-area
                                     check-box]]
-        [clojure.pprint :only [pprint]])
+        [clojure.pprint :only [pprint]]
+        [house-the-homeless.entities]
+        [house-the-homeless.utils]
+        [house-the-homeless.templates]
+        [house-the-homeless.clients]
+        [house-the-homeless.codes])
   (:require [noir.response :as resp]
             [noir.validation :as vali]
+            [house-the-homeless.settings :as settings]
             [appengine-magic.services.user :as ui]
             [appengine-magic.services.datastore :as ds]))
 
@@ -14,20 +20,14 @@
 ;; TODO investigate exception handling in Clojure (i.e. for integer
 ;; conversion)
 ;; TODO investigate auto-increment in gae (for user ids etc.)
-;; TODO filter "My Clients" based on author
 ;; TODO make hash more unique
 
-;; TEST client pages (non-valid inputs)
+;; TEST client pages (non-valid inputs)q
 ;; TEST invalid codes (strings, integers, string-ints, symbols)
 
-;;
-;;
-;; Entities
-;;
-;;
-
 (ds/defentity Code [^:key content])
-(ds/defentity Event [^:key content])
+(ds/defentity Event [^:key content
+                     date])
 (ds/defentity Client [creator
                       code
                       firstname
@@ -35,6 +35,7 @@
                       dob
                       ethnicity
                       nationality
+                      notes
                       ;; home-number
                       ;; mobile-number
                       ;; email
@@ -42,45 +43,15 @@
                       ;; ni-number
                       ;;case-notes
                       terms])
-(ds/defentity Stay [^:key date])
+(ds/defentity Stay [date
+                    status])
 
-;;
-;;
-;; Utilities
-;;
-;;
+(defn get-stays [client]
+  "Return a list of stays for this client, unformatted"
+  [])
 
-(defn debug-client
-  "Print out the map representing a client"
-  [client]
-  (with-out-str (pprint client)))
-
-(def ethnicities
-  ["White"
-   "African"
-   "Asian"
-   "Other"])
-
-(defn full-name
-  "Take a client entity and return the full name as a string"
-  [client]
-  (str (:firstname client) " " (:lastname client)))
-
-(defn parse-int
-  [string]
-  (try (Integer. string)
-       (catch Exception e nil)))
-
-(defn gen-code
-  "Generate a random unique code"
-  []
-  (rand-int 100))
-
-(defn code-correct-format?
-  [code]
-  (if (parse-int code)
-    'true
-    'false))
+(defn stay-template [stay]
+  (:status stay))
 
 (defn code-issued? 
   "Returns true if the specified code is found in the database"
@@ -93,24 +64,6 @@
        0)
     'false))
 
-(defn is-admin?
-  "Returns true if the current user is logged in and admin"
-  []
-  (and (ui/user-logged-in?) (ui/user-admin?)))
-
-(defn current-user-email
-  "Return the email of the current user or nil"
-  []
-  (let [user (ui/current-user)]
-    (if user
-      (ui/get-email user)
-      nil)))
-
-(defn link-client
-  "Create a link from a client entity"
-  [client]
-  (link-to (str "/client/" (ds/key-id client)) (full-name client)))
-
 (defn get-clients []
   "Return a list of clients visible to the current user"
   (if (is-admin?)
@@ -119,7 +72,13 @@
                    :filter (= :creator (current-user-email)))
          (catch Exception e nil))))
 
+(defn get-num-stays
+  "Return the number of stays for a client"
+  [client]
+  0)
+
 (defn get-client [pk]
+  ;; TODO handle appropriately when pk is nil
   "Return a list of clients visible to the current user"
   (let [client (ds/retrieve Client pk)]
     (if (is-admin?)
@@ -127,75 +86,6 @@
       (and (= (current-user-email)
               (:creator client))
            client))))
-
-;;
-;;
-;; Templates
-;;
-;;
-
-(defpartial side-bar []
-  [:div#sidebar
-   (if (ui/user-logged-in?)
-     [:ul
-      [:li "Logged in as " (ui/current-user) (if (is-admin?) " (Admin)")]
-      [:li (link-to (ui/logout-url) "Logout")]
-      [:li "Clients"
-       [:ul
-        [:li (link-to "/clients" "My Clients")]
-        [:li (link-to "/client/new" "New Client")]]]
-      (if (is-admin?)
-        [:li "Codes"
-         [:ul
-          [:li (link-to "/codes" "All Codes")]
-          [:li (link-to "/code/new" "New Code")]]])]
-     [:ul
-      [:li "Not logged in"]
-      [:li (link-to (ui/login-url :destination "/admin") "Login")]]
-     )])
-
-(defpartial unauthorised []
-  (html5
-     [:head
-      [:title "Unauthorised"]
-      (include-css "/css/main.css")]
-     [:body
-      [:header [:h1 "Unauthorised"]]
-      [:p "You must log in before viewing this page"]]))
-
-;; Protected admin page template
-(defpartial layout [title & content]
-  (if (ui/user-logged-in?)
-    (html5
-     [:head
-      [:title title]
-      (include-css "/css/main.css")]
-     [:body
-      [:header [:h1 "House the Homeless"]]
-      (side-bar)
-      (html
-       [:div#main
-        [:h2 title]
-        content])])
-    ;; Unauthorised
-    (unauthorised)))
-  
-;; Unprotected welcome page
-(defpartial welcome []
-  (html5
-   [:head
-    [:title "Welcome"]
-    (include-css "/css/main.css")]
-   [:body
-    [:header [:h1 "House the Homeless"]]
-    (html
-     [:div#main
-      [:h2 "Welcome"]
-      (side-bar)
-      [:p "Welcome"]])]))
-
-(defpartial error-item [[first-error]]
-  [:p.error first-error])
 
 ;;
 ;;
@@ -217,35 +107,42 @@
 ;;                       case-notes
 
 (defpartial user-fields [{:keys [firstname lastname dob ethnicity
-                                 nationality]}]
-   [:tr [:td
-         (vali/on-error :firstname error-item)
-         (label "firstname" "First name: ")
-         (text-field "firstname" firstname)]]
-   [:tr [:td
-    (vali/on-error :lastname error-item)
-    (label "lastname" "Last name: ")
-    (text-field "lastname" lastname)]]
-   [:tr [:td
-    (vali/on-error :dob error-item)
-    (label "dob" "Date of Birth: ")
-    (text-field "dob" dob)]]
-   [:tr [:td
-    (vali/on-error :ethnicity error-item)
-    (label "dob" "Ethnicity: ")
-    (drop-down "ethnicity" ethnicities ethnicity)]]
-   [:tr [:td
-    (vali/on-error :nationality error-item)
-    (label "nationality" "Nationality: ")
-    (text-field "nationality" nationality)]])
+                                 nationality notes]}]
+  [:h3 "Details"]
+  ;; Print out the fields two per line
+  (map #(rowify (first %) (second %))
+       (partition-all 2
+                  [[:td (vali/on-error :firstname error-item)
+                    (label "firstname" "First name:")
+                    (text-field "firstname" firstname)]
+                   [:td
+                    (vali/on-error :lastname error-item)
+                    (label "lastname" "Last name:")
+                    (text-field "lastname" lastname)]
+                   [:td
+                    (vali/on-error :dob error-item)
+                    (label "dob" "Date of Birth:")
+                    (text-field "dob" dob)]
+                   [:td
+                    (vali/on-error :ethnicity error-item)
+                    (label "dob" "Ethnicity:")
+                    (drop-down "ethnicity" settings/ethnicities ethnicity)]
+                   [:td
+                    (vali/on-error :nationality error-item)
+                    (label "nationality" "Nationality:")
+                    (text-field "nationality" nationality)]
+                   [:td
+                    (vali/on-error :notes error-item)
+                    (label "notes" "Notes")
+                    (text-area "notes" notes)]])))
 
 (defpartial terms-field [terms]
   [:tr [:td
         (vali/on-error :terms error-item)
-        (label "terms" "Do you accept the terms and conditions? ")
+        (label "terms" (str "I accept the " (html (link-to "/terms" "terms and contitions"))))
         (check-box "terms" terms)]])
 
-(defn valid? [{:keys [code firstname lastname dob terms]}]
+(defn valid-client? [{:keys [code firstname lastname dob terms]}]
   (if (not (is-admin?))
     (loop []
       ;; TODO check for valid format
@@ -263,6 +160,13 @@
              [:dob "You must supply a date of birth"])
   (not (vali/errors? :code :lastname :firstname :dob :terms)))
 
+(defn valid-stay? [{:keys [date status]}]
+  (vali/rule (vali/has-value? date)
+             [:date "You must supply a date"])
+  (vali/rule (vali/has-value? status)
+             [:status "You must supply a valid status"])
+  (not (vali/errors? :date :status)))
+
 ;;
 ;;
 ;; Pages
@@ -277,6 +181,9 @@
 
 (defpage "/unauthorised" []
   (unauthorised))
+
+(defpage "/client-not-found" []
+  (client-not-found))
 
 (defpage "/admin" []
   (layout "Admin"
@@ -302,45 +209,101 @@
           (let [clients (get-clients)]
             (html
              [:p (link-to "/client/new" "Add new client")]
-             (ordered-list (map link-client clients))))))
+             #_(ordered-list (map link-client clients))
+             [:table.tabular
+              [:tr.heading
+               [:td "Name"]
+               [:td "Stays"]]
+              (map
+               #(html [:tr
+                       [:td (link-client %)]
+                       [:td (colourise-stays (get-num-stays %) settings/default-max-stay)]])
+               clients)]))))
 
-(defpage "/client/:id" {id :id}
+#_(defpage [:GET "/client/:id/stay/new"] {id :id}
   (let [int-id (parse-int id)
         client (get-client int-id)]
     (if client
-      (layout (full-name client)
-            (html
-             (link-to (str "/client/edit/" int-id) "Edit")
-             [:p (debug-client client)]))
-    (render "/unauthorised"))))
+      "Adding stay ... this will probably be an ajax call"
+      (let [parent (ds/retrieve Client id)
+            child (ds/new* Stay ["a date" "Stayed"] :parent parent)]
+        (ds/with-transaction
+          (ds/save! (assoc parent :members (conj (:children child) (ds/key-id child))))
+          (ds/save! child)))
+      (render "/client-not-found"))))
 
-(defpage "/client/edit/:id" {:keys [posted id] :as env}
+(defpage [:GET "/client/:id/stay/new"] {id :id :as form}
+  ;; INFO will be POST
+  (let [int-id (parse-int id)
+        client (get-client int-id)]
+    (if client
+      (if (valid-stay? form)
+        (loop []
+          ;; insert stay entity with client as parent
+          (str form))
+        "invalid"
+        #_(render (str "/client/" int-id "/stay/new")))
+      (render "/client-not-found"))))
+
+;; (defpage [:GET  "/client/:id"] {id :id}
+;;   (let [int-id (parse-int id)
+;;         client (get-client int-id)]
+;;     (if client
+;;       (layout (full-name client)
+;;             (html
+;;              (link-to (str "/client/edit/" int-id) "Edit details")
+;;              [:table.form (user-fields client)]
+;;              [:h3 "Stays"]
+;;              (link-to (str "/client/" int-id "/stay/new") "New stay")
+;;              (ordered-list (map stay-template (get-stays client)))))
+;;     (render "/client-not-found"))))
+
+(defpage [:GET "/client/edit/:id"] {:keys [posted id] :as env}
   (let [int-id (parse-int id)
         client (if (not posted)
                  (ds/retrieve Client int-id)
                  env)]
-    (layout (full-name client)
-            (form-to [:post (str "/client/edit/" int-id)]
-                     [:table
-                      (user-fields client)
-                      [:tr [:td
-                            (submit-button "Save")
-                            " or "
-                            (link-to (str "/client/" int-id) "Cancel")]]]))))
+    (if client
+      (layout (full-name client)
+              (form-to [:post (str "/client/edit/" int-id)]
+                       [:table.form
+                        (user-fields client)
+                        [:tr [:td
+                              (submit-button "Save")]]])
+              (if (is-admin?)
+                (html
+                 [:h3 "Stays " "(" (colourise-stays 0 settings/default-max-stay) ")"]
+                 (link-to (str "/client/" int-id "/stay/new") "New stay")
+                 [:table.tabular
+                  [:tr.heading
+                   [:td "Date"]
+                   [:td "Status"]]
+                  [:tr
+                   [:td "asd"]
+                   [:td "sdsd"]]
+                  [:tr
+                   [:td "asd"]
+                   [:td "sdsd"]]
+                  [:tr
+                   [:td "asd"]
+                   [:td "sdsd"]]]
+                 [:h3 "Metadata"]
+                 [:p (str  "Referred by " (:creator client))])))
+      (render "/client-not-found"))))
 
-(defpage [:post "/client/edit/:id"] {id :id :as form}
+(defpage [:POST "/client/edit/:id"] {id :id :as form}
   (let [int-id (parse-int id)
         client (ds/retrieve Client int-id)]
-    (if (valid? form)
+    (if (valid-client? form)
       (and
        (ds/save! (conj client form))
-       (resp/redirect (str "/client/" int-id)))
+       (resp/redirect (str "/client/edit/" int-id)))
       (render "/client/edit/:id" (assoc form :posted 'true)))))
 
-(defpage "/client/new" {:keys [terms code] :as client}
+(defpage [:GET "/client/new"] {:keys [terms code] :as client}
   (layout "New Client"
           (form-to [:post "/client/new"]
-                   [:table
+                   [:table.form
                     (if (not (is-admin?))
                       (code-field code))
                     (user-fields client)
@@ -351,8 +314,8 @@
                           " or "
                           (link-to "/clients" "Cancel")]]])))
 
-(defpage [:post "/client/new"] {:as form}
-  (if (valid? form)
+(defpage [:POST "/client/new"] {:as form}
+  (if (valid-client? form)
     (loop []
       ;; TODO check for errors with insertion
       (ds/save! (Client. (current-user-email)
@@ -362,6 +325,7 @@
                          (:dob form)
                          (:ethnicity form)
                          (:nationality form)
+                         (:notes form)
                          (:terms form)))
       (layout "New Client"
               [:p (str "Success!" form)]
