@@ -1,12 +1,13 @@
 (ns house-the-homeless.templates
   (:use [noir.core :only [defpartial render]]
         [hiccup.core :only [html]]
-        [hiccup.page-helpers :only [link-to html5 include-css ordered-list]]
+        [hiccup.page-helpers :only [link-to html5 include-css include-js ordered-list]]
         [hiccup.form-helpers :only [drop-down form-to label submit-button text-field
                                     check-box]]
         [clojure.pprint :only [pprint]]
         [house-the-homeless.entities]
-        [house-the-homeless.utils])
+        [house-the-homeless.utils]
+        [noir.session :as sess])
   (:require [house-the-homeless.settings :as settings]
             [appengine-magic.services.user :as ui]))
 
@@ -59,14 +60,21 @@
     (html5
      [:head
       [:title (str title " - House the Homeless")]
-      (include-css "/css/main.css")]
-     [:body
-      [:header [:h1 "House the Homeless"]]
-      (side-bar)
-      (html
-       [:div#main
-        [:h2 title]
-        content])])
+      (include-css "/css/reset.css")
+      (include-css "/css/main.css")
+      (include-js "/js/jquery-1.4.2.min.js")
+      (include-js "/js/jquery-ui-1.8.1.custom.min.js")
+      (include-js "/js/jquery.address-1.3.min.js")
+      (include-js "/js/main.js")
+      [:body
+       [:div#flash (sess/flash-get)]
+       [:header [:h1 "House the Homeless"]]
+       (side-bar)
+       (html
+        [:div#main
+         [:h2 title]
+         content])]
+      [:script "hth.init();"]])
     ;; Unauthorised
     (unauthorised)))
   

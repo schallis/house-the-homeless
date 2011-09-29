@@ -1,7 +1,40 @@
 html {
     font-family: "Helvetica", "Arial", sans-serif;
     background: #f8f8f8;
-    padding: 20px;
+    /*padding: 20px;*/
+    color: #444;
+}
+
+.ui-tabs-hide {                                                                               display: none;
+}
+
+.ui-tabs-nav {
+    display: block;
+    background:-webkit-gradient(linear,left top,left bottom,from(#fff),to(#ececec));
+    margin-bottom: 10px;
+}
+
+.ui-tabs-nav li {
+    display: inline-block;
+    position: relative;
+}
+
+.ui-tabs-nav a {
+    color: #bbb;
+    padding: 7px 20px;
+    display: block;
+    background-color: #eee;
+    background: -webkit-gradient(linear,left top,left bottom,from(#fff),to(#ececec));
+    margin: 10px 10px 0px 0;
+    border-color: #ccc;
+    border-width: 1px;
+    border-bottom-width: 0px;
+    border-style: solid;
+    -webkit-border-radius: 3px 3px 0 0;
+}
+
+.ui-tabs-selected a {
+    background: #fff;
     color: #444;
 }
 
@@ -48,7 +81,6 @@ p.error {
 
 table {
     border-spacing: 0;
-    margin: 10px 0;
 }
 
 table.tabular {
@@ -103,7 +135,7 @@ input[type='button']:hover, input[type='submit']:hover, a.button:hover {
 input[type='button']:active, input[type='submit']:active, a.button:active{border-color:#2a65a0;border-bottom-color:#518cc6;background:#3072b3;filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#3072b3',endColorstr='#599bdc');background:-webkit-gradient(linear,left top,left bottom,from(#3072b3),to(#599bdc));background:-moz-linear-gradient(top,#3072b3,#599bdc);}
 
 input[type='text'], input[type='password'], textarea {
-    font-size: 1.2em;
+    font-size: 1.0em;
     padding: 4px;
     border-radius: 3px;
     -moz-border-radius: 3px;
@@ -119,6 +151,7 @@ h3 {
 
 table.tabular tr td {
     border-bottom: 1px solid #ddd;
+    line-height: 2.2em;
 }
 
 span.green {
@@ -131,4 +164,29 @@ span.red {
 
 span.yellow {
     color: #ec8;
+}
+
+h1 {
+    font-size: 2em;
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 1.6em;
+    font-weight: bold;
+    margin-bottom: 0.4em;
+}
+
+p {
+    margin: 10px 0;
+}
+
+div#flash {
+    background: #4183C4;
+    color: #fff;
+    display: block;
+    line-height: 2em;
+    text-align: center;
+    /* Hide by default and animate open with JS */
+    /*display: none;*/
 }

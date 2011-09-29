@@ -8,3 +8,16 @@
    "Asian"
    "Pan-Asian"
    "Other"])
+
+(def client-statuses
+  ["Waiting list" ;; default
+   "Not waiting"
+   "Rejected"])
+
+(def stay-statuses
+  ["Pending" ;; default
+   "Reserve"
+   "Stayed"
+   "No Bed"
+   "Late"
+   "Disiplinary"])
