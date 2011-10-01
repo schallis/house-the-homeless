@@ -353,9 +353,11 @@
               [:div#uitabs               
                [:ul
                 [:li (link-to "#details" "Details")]
-                [:li (link-to "#stays"
-                              (html "Stays " "(" (get-stays-count int-id) ")"))]
-                [:li (link-to "#metadata" "Metadata")]]
+                (if (is-admin?)
+                  (html
+                   [:li (link-to "#stays"
+                                 (html "Stays " "(" (get-stays-count int-id) ")"))]
+                   [:li (link-to "#metadata" "Metadata")]))]
                [:div#details
                 (form-to [:post (str "/client/edit/" int-id)]
                          [:table.form
