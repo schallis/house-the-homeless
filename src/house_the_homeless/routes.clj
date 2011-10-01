@@ -234,18 +234,21 @@
             (html
              [:p (link-to "/code/new" "Generate new code")]
              [:table.tabular
-              [:tr.heading
-               [:td "Code"]
-               [:td "Redeemed?"]]
-              (map
-               #(html [:tr
-                       [:td (:content %)]
-                       [:td (:redeemed %)]])
-               codes)]))))
+              [:thead
+               [:tr.heading
+                [:td "Code"]
+                [:td "Redeemed?"]]]
+              [:tbody
+               (map
+                #(html [:tr
+                        [:td (:content %)]
+                        [:td (:redeemed %)]])
+                codes)]]))))
 
 (defpage "/code/new" []
   (layout "New Code"
           (let [code (gen-code)]
+            (sess/flash-put! (str "New code '" code "' generated"))
             (ds/save! (Code. code "no"))
             (html
              [:p code]
@@ -260,20 +263,22 @@
                "There are no clients"
                (html
                 [:table.tabular
-                 [:tr.heading
-                  [:td "ID"]
-                  [:td "Name"]
-                  [:td "Status"]
-                  [:td "Stays"]]
-                 (map
-                  #(html [:tr
-                          [:td (ds/key-id %)]
-                          [:td (link-client %)]
-                          [:td (:status %)]
-                          [:td (colourise-stays
-                                (get-stays-count (ds/key-id %))
-                                settings/default-max-stay)]])
-                  clients)]))))))
+                 [:thead
+                  [:tr.heading
+                   [:td "ID"]
+                   [:td "Name"]
+                   [:td "Status"]
+                   [:td "Stays"]]]
+                 [:tbody
+                  (map
+                   #(html [:tr
+                           [:td (ds/key-id %)]
+                           [:td (link-client %)]
+                           [:td (:status %)]
+                           [:td (colourise-stays
+                                 (get-stays-count (ds/key-id %))
+                                 settings/default-max-stay)]])
+                   clients)]]))))))
 
 (defpage "/stays" []
   (layout "Stays"
@@ -282,16 +287,18 @@
               "Noone has stayed yet"
               (html
                [:table.tabular
-                [:tr.heading
-                 [:td "Date"]
-                 [:td "Status"]
-                 [:td "Client ID"]]
-                (map
-                 #(html [:tr
-                         [:td (:date %)]
-                         [:td (:status %)]
-                         [:td (:client-id %)]])
-                 stays)])))))
+                [:thead
+                 [:tr.heading
+                  [:td "Date"]
+                  [:td "Status"]
+                  [:td "Client ID"]]]
+                [:tbody
+                 (map
+                  #(html [:tr
+                          [:td (:date %)]
+                          [:td (:status %)]
+                          [:td (:client-id %)]])
+                  stays)]])))))
 
 (defpage [:POST "/client/:id/stay/new"] {id :id :as form}
   (let [int-id (parse-int id)
@@ -374,20 +381,24 @@
                    (if (empty? stays)
                      (html
                       [:table.tabular
-                       [:tr.heading
-                        [:td "Date"]
-                        [:td "Status"]]]
-                      [:p "This client has not stayed yet"])
-                     (html
-                      [:table.tabular
-                       [:tr.heading
-                        [:td "Date"]
-                        [:td "Status"]]
-                       (map
-                        #(html [:tr
-                                [:td (:date %)]
-                                [:td (:status %)]])
-                        stays)]))
+                       [:thead
+                        [:tr.heading
+                         [:td "Date"]
+                         [:td "Status"]]]]
+                      [:tbody
+                       [:p "This client has not stayed yet"]])
+                      (html
+                       [:table.tabular
+                        [:thead
+                         [:tr.heading
+                          [:td "Date"]
+                          [:td "Status"]]]
+                        [:tbody
+                         (map
+                          #(html [:tr
+                                  [:td (:date %)]
+                                  [:td (:status %)]])
+                          stays)]]))
                    [:p (link-to (str "/client/" int-id "/stay/new") "New stay")]]
                   [:div#metadata
                    [:p (str "Referred by " (:creator client))]

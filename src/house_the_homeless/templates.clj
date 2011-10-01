@@ -7,7 +7,7 @@
         [clojure.pprint :only [pprint]]
         [house-the-homeless.entities]
         [house-the-homeless.utils]
-        [noir.session :as sess])
+        [noir.session :as sess :only [flash-get flash-put!]])
   (:require [house-the-homeless.settings :as settings]
             [appengine-magic.services.user :as ui]))
 
@@ -15,7 +15,7 @@
   [:div#sidebar
    (if (ui/user-logged-in?)
      [:ul
-      [:li "Logged in as " (ui/current-user) (if (is-admin?) " (Admin)")]
+      [:li (ui/current-user) (if (is-admin?) " (Admin)")]
       [:li (link-to (ui/logout-url) "Logout")]
       [:li "Clients"
        [:ul
@@ -65,7 +65,9 @@
       (include-js "/js/jquery-1.4.2.min.js")
       (include-js "/js/jquery-ui-1.8.1.custom.min.js")
       (include-js "/js/jquery.address-1.3.min.js")
+      (include-js "/js/jquery.dataTables.min.js")
       (include-js "/js/main.js")
+      "<link href='http://fonts.googleapis.com/css?family=Chivo:400' rel='stylesheet' type='text/css'>"
       [:body
        [:div#flash (sess/flash-get)]
        [:header [:h1 "House the Homeless"]]
@@ -83,7 +85,9 @@
   (html5
    [:head
     [:title "Welcome"]
-    (include-css "/css/main.css")]
+    (include-css "/css/reset.css")
+    (include-css "/css/main.css")
+    "<link href='http://fonts.googleapis.com/css?family=Chivo:400' rel='stylesheet' type='text/css'>"]
    [:body
     [:header [:h1 "House the Homeless"]]
     (html

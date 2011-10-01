@@ -7,6 +7,7 @@ window.hth = {
     //this.setupDragUpload();
     this.setupBrowseTabs();
     this.animateFlash();
+    this.setupDatatables();
   },
   // setupFavourites: function(event) {
   //   var self = this;
@@ -134,5 +135,8 @@ window.hth = {
   animateFlash: function() {
     var flash = $('#flash');
     window.setTimeout("$('#flash').slideUp()", 5000);
+  },
+  setupDatatables: function() {
+    $('.tabular').dataTable();
   }
 };
