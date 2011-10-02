@@ -3,7 +3,7 @@ html {
     background: #f8f8f8;
     padding: 20px;
     color: #444;
-    font-family: "Chivo";
+    font-family: "Chivo", Helvetica;
 }
 
 .ui-tabs-hide {                                                                               display: none;
@@ -11,8 +11,9 @@ html {
 
 .ui-tabs-nav {
     display: block;
-    background:-webkit-gradient(linear,left top,left bottom,from(#fff),to(#ececec));
+    background:-webkit-gradient(linear,left top,left bottom,from(#fff),to(#f7f7f7));
     margin-bottom: 10px;
+    border-bottom: 1px solid #ccc;
 }
 
 .ui-tabs-nav li {
@@ -32,11 +33,14 @@ html {
     border-bottom-width: 0px;
     border-style: solid;
     -webkit-border-radius: 3px 3px 0 0;
+    text-shadow:1px 1px 0 #fff;
 }
 
 .ui-tabs-selected a {
     background: #fff;
     color: #444;
+    position: relative;
+    bottom: -1px;
 }
 
 a {
@@ -68,7 +72,7 @@ div#sidebar > ul {
 
 div#sidebar > ul > li {
     background: #444;
-    border-radius: 4px;
+    border-radius: 3px;
     margin-bottom: 4px;
     color: #fff;
     font-size: 0.85em;
@@ -92,13 +96,12 @@ div#sidebar > ul > li > ul > li > a {
 }
 
 div#main {
+    position: relative;
     display: block;
     float: left;
     width: 600px;
     background: #fff;
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
-    border-radius: 10px;
+    -webkit-border-radius: 5px;
     border-width: 1px;
     border-style: solid;
     border-color: #ddd #ccc #aaa #ccc;
@@ -136,7 +139,7 @@ table.form tr td {
     padding: 0;
 }
 
-label, th, table.tabular tr.heading {
+label, th, table.tabular tr.heading, thead {
     text-transform: uppercase;
     font-size: 0.75em;
     color: #aaa;
@@ -147,7 +150,7 @@ label {
     display: block;
 }
 
-select {
+form select {
     font-size: 1.25em;
     line-height: 4em;
     vertical-align: middle;
@@ -167,7 +170,7 @@ input[type='text'], input[type='password'], textarea {
     font-size: 1.0em;
     padding: 4px;
     border-radius: 3px;
-    -moz-border-radius: 3px;
+    -moz-border-radius: 5px;
     -webkit-border-radius: 3px;
     border-width: 1px;
     border-style: solid;
@@ -181,6 +184,7 @@ h3 {
 table.tabular tr td {
     border-bottom: 1px solid #ddd;
     line-height: 2.2em;
+    padding: 0 4px;
 }
 
 span.green {
@@ -225,4 +229,54 @@ div#flash {
     text-align: center;
     /* Hide by default and animate open with JS */
     /*display: none;*/
+}
+
+.dataTables_info {
+    font-size: 0.75em;
+    color: #aaa;
+    text-align: left;
+    line-height: 2.6em;
+}
+
+.dataTablesWrapper label {
+    float: left;
+    display: inline;
+}
+
+.dataTables_length {
+    float: left;
+    line-height: 3em;
+}
+
+.dataTables_filter {
+    float: right;
+    line-height: 3em;
+}
+
+.dataTables_filter input {
+    border-radius: 30px;
+    width: 200px;
+}
+
+.sorting_desc {
+}
+
+.sorting_asc {
+}
+
+div.actions {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    text-align: right;
+    line-height: 2.3em;
+}
+
+.sorting_1 {
+    background: #f6f6f6;
+    border: 1px solid #eee;
+}
+
+table.tabular tr.even {
+    background: #fafafa;
 }

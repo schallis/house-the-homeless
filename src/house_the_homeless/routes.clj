@@ -1,9 +1,10 @@
 (ns house-the-homeless.routes
   (:use [noir.core :only [defpartial defpage render]]
         [hiccup.core :only [html]]
-        [hiccup.page-helpers :only [link-to html5 include-css ordered-list unordered-list]]
-        [hiccup.form-helpers :only [drop-down form-to label submit-button text-field text-area
-                                    check-box]]
+        [hiccup.page-helpers :only [link-to html5 include-css ordered-list
+                                    unordered-list]]
+        [hiccup.form-helpers :only [drop-down form-to label submit-button
+                                    text-field text-area check-box]]
         [clojure.pprint :only [pprint]]
         [house-the-homeless.entities]
         [house-the-homeless.utils]
@@ -22,6 +23,7 @@
 ;; conversion)
 ;; TODO investigate auto-increment in gae (for user ids etc.)
 ;; TODO make hash more unique
+;; TODO check security of all pages for logged in and non-admin users
 
 ;; TEST client pages (non-valid inputs)q
 ;; TEST invalid codes (strings, integers, string-ints, symbols)
@@ -185,7 +187,9 @@
   (if (not (is-admin?))
     (loop []
       ;; TODO check for valid format
-      (vali/rule (and (parse-int code) (code-issued? (parse-int code)))
+      (vali/rule (or (= code settings/secret-key)
+                     (and (parse-int code)
+                          (code-issued? (parse-int code))))
                  [:code "That code is not valid"])
       (vali/rule (vali/has-value? code)
                  [:code "You must supply a code"])
@@ -227,6 +231,10 @@
 (defpage "/admin" []
   (layout "Admin"
           [:p "Use the menu on the left to create clients and codes"]))
+
+(defpage "/reports" []
+  (admin-only
+   (layout "Reports")))
 
 (defpage "/codes" []
   (layout "Codes"
@@ -281,24 +289,25 @@
                    clients)]]))))))
 
 (defpage "/stays" []
-  (layout "Stays"
-          (let [stays (get-stays)]
-            (if (empty? stays)
-              "Noone has stayed yet"
-              (html
-               [:table.tabular
-                [:thead
-                 [:tr.heading
-                  [:td "Date"]
-                  [:td "Status"]
-                  [:td "Client ID"]]]
-                [:tbody
-                 (map
-                  #(html [:tr
-                          [:td (:date %)]
-                          [:td (:status %)]
-                          [:td (:client-id %)]])
-                  stays)]])))))
+  (admin-only
+   (layout "Stays"
+           (let [stays (get-stays)]
+             (if (empty? stays)
+               "Noone has stayed yet"
+               (html
+                [:table.tabular
+                 [:thead
+                  [:tr.heading
+                   [:td "Date"]
+                   [:td "Status"]
+                   [:td "Client ID"]]]
+                 [:tbody
+                  (map
+                   #(html [:tr
+                           [:td (:date %)]
+                           [:td (:status %)]
+                           [:td (:client-id %)]])
+                   stays)]]))))))
 
 (defpage [:POST "/client/:id/stay/new"] {id :id :as form}
   (let [int-id (parse-int id)
@@ -306,48 +315,13 @@
     (if client
       (and
        (ds/save! (Stay.
-                   (:date form)
-                   (:status form)
-                   (:notes form)
-                   int-id))
+                  (:date form)
+                  (:status form)
+                  (:notes form)
+                  int-id))
        (sess/flash-put! "Stay created successfully")
        (resp/redirect (str "/client/edit/" int-id "#stays")))
       (render "/client-not-found"))))
-
-(defpage [:GET "/client/:id/stay/new"] {id :id :as form}
-  ;; INFO will be POST
-  
-  (let [int-id (parse-int id)
-        client (get-client int-id)]
-    (layout "New Stay"
-          (form-to [:post (str "/client/" int-id "/stay/new")]
-                   [:table.form
-                    (stay-fields form)
-                    [:tr [:td
-                          (submit-button "Add stay")
-                          " or "
-                          (link-to (str "/client/edit/" int-id "#stays") "Cancel")]]]))
-    #_(if client
-      (if (valid-stay? form)
-        (loop []
-          ;; insert stay entity with client as parent
-          (str form))
-        "invalid"
-        #_(render (str "/client/" int-id "/stay/new")))
-      (render "/client-not-found"))))
-
-;; (defpage [:GET  "/client/:id"] {id :id}
-;;   (let [int-id (parse-int id)
-;;         client (get-client int-id)]
-;;     (if client
-;;       (layout (full-name client)
-;;             (html
-;;              (link-to (str "/client/edit/" int-id) "Edit details")
-;;              [:table.form (user-fields client)]
-;;              [:h3 "Stays"]
-;;              (link-to (str "/client/" int-id "/stay/new") "New stay")
-;;              (ordered-list (map stay-template (get-stays client)))))
-;;     (render "/client-not-found"))))
 
 (defpage [:GET "/client/edit/:id"] {:keys [posted id] :as env}
   (let [int-id (parse-int id)
@@ -357,13 +331,14 @@
         stays (get-stays int-id)]
     (if client
       (layout (full-name client)
-              [:div#uitabs               
+              [:div#uitabs
                [:ul
                 [:li (link-to "#details" "Details")]
                 (if (is-admin?)
                   (html
                    [:li (link-to "#stays"
                                  (html "Stays " "(" (get-stays-count int-id) ")"))]
+                   [:li (link-to "#newstay" "New Stay")]
                    [:li (link-to "#metadata" "Metadata")]))]
                [:div#details
                 (form-to [:post (str "/client/edit/" int-id)]
@@ -378,43 +353,40 @@
                (if (is-admin?)
                  (html
                   [:div#stays
-                   (if (empty? stays)
-                     (html
-                      [:table.tabular
-                       [:thead
-                        [:tr.heading
-                         [:td "Date"]
-                         [:td "Status"]]]]
-                      [:tbody
-                       [:p "This client has not stayed yet"]])
-                      (html
-                       [:table.tabular
-                        [:thead
-                         [:tr.heading
-                          [:td "Date"]
-                          [:td "Status"]]]
-                        [:tbody
-                         (map
-                          #(html [:tr
-                                  [:td (:date %)]
-                                  [:td (:status %)]])
-                          stays)]]))
-                   [:p (link-to (str "/client/" int-id "/stay/new") "New stay")]]
+                   (html
+                    [:table.tabular
+                     [:thead
+                      [:tr
+                       [:td "Date"]
+                       [:td "Status"]
+                       [:td "Notes"]]]
+                     [:tbody
+                      (map
+                       #(html [:tr
+                               [:td (:date %)]
+                               [:td (:status %)]
+                               [:td (:notes %)]]) stays)]])]
+                  [:div#newstay
+                   (form-to [:post (str "/client/" int-id "/stay/new")]
+                            [:table.form
+                             (stay-fields env)
+                             [:tr [:td (submit-button "Add stay")]]])]
                   [:div#metadata
                    [:p (str "Referred by " (:creator client))]
-                   [:p (str "Last edited by " (:last-modifier client))]]
-                  ))])
+                   [:p (str "Last edited by " (:last-modifier client))]]))])
       (render "/client-not-found"))))
 
 (defpage [:POST "/client/edit/:id"] {id :id :as form}
   (let [int-id (parse-int id)
         client (ds/retrieve Client int-id)]
-    (if (valid-client? form)
+    (if (valid-client? (assoc form :code settings/secret-key :terms "true"))
       (and
        (ds/save! (conj client form {:last-modifier (current-user-email)}))
        (sess/flash-put! "Client updated successfully")
        (resp/redirect (str "/client/edit/" int-id)))
-      (render "/client/edit/:id" (assoc form :posted 'true)))))
+      (and
+       (sess/flash-put! (vali/get-errors :code))
+       (render "/client/edit/:id" (assoc form :posted 'true))))))
 
 (defpage [:GET "/client/new"] {:keys [terms code] :as client}
   (layout "New Client"
@@ -434,6 +406,11 @@
   (if (valid-client? form)
     (loop []
       ;; TODO check for errors with insertion
+      (if (not (is-admin?))
+        ;; TODO figure outbetter way to validate this form to avoid
+        ;; horrible secret-key hack
+        (let [code (ds/retrieve Code (parse-int (:code form)))]
+          (ds/save! (conj code {:redeemed "Yes"}))))
       (ds/save! (Client. (first settings/client-statuses)
                          (current-user-email)
                          (current-user-email)

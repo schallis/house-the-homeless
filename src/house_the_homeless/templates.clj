@@ -15,25 +15,27 @@
   [:div#sidebar
    (if (ui/user-logged-in?)
      [:ul
-      [:li (ui/current-user) (if (is-admin?) " (Admin)")]
-      [:li (link-to (ui/logout-url) "Logout")]
+      [:li (ui/current-user) #_(if (is-admin?) " (Admin)")
+       [:ul
+        [:li (link-to (ui/logout-url) "Logout")]]]
       [:li "Clients"
        [:ul
         [:li (link-to "/clients" "My Clients")]
         [:li (link-to "/client/new" "New Client")]]]
       (if (is-admin?)
         (html
-         [:li "Stays"
+         [:li "Shelter log"
           [:ul
            [:li (link-to "/stays" "All Stays")]
-           [:li (link-to "/stays/stats" "Reports")]]]
+           [:li (link-to "/reports" "Reports")]]]
          [:li "Codes"
           [:ul
            [:li (link-to "/codes" "All Codes")]
            [:li (link-to "/code/new" "New Code")]]]))]
      [:ul
-      [:li "Not logged in"]
-      [:li (link-to (ui/login-url :destination "/admin") "Login")]]
+      [:li "Anonymous"
+       [:ul
+        [:li (link-to (ui/login-url :destination "/admin") "Login")]]]]
      )])
 
 (defpartial unauthorised []
@@ -43,7 +45,17 @@
       (include-css "/css/main.css")]
      [:body
       [:header [:h1 "Unauthorised"]]
-      [:p "You must log in before viewing this page"]]))
+      [:p "You must log in with an appropriate account before viewing this page"]]))
+
+(defpartial not-found []
+  (html5
+     [:head
+      [:title "Page not found"]
+      (include-css "/css/reset.css")
+      (include-css "/css/main.css")]
+     [:body
+      [:header [:h1 "Page not found"]]
+      [:p "I'm afraid I can't do that, Dave."]]))
 
 (defpartial client-not-found []
   (html5
@@ -78,8 +90,17 @@
          content])]
       [:script "hth.init();"]])
     ;; Unauthorised
-    (unauthorised)))
-  
+    (if (true? settings/debug)
+      (unauthorised)
+      (not-found))))
+
+(defpartial admin-only [& content]
+  (if (is-admin?)
+    content
+    (if (true? settings/debug)
+      (unauthorised)
+      (not-found))))
+
 ;; Unprotected welcome page
 (defpartial welcome []
   (html5
@@ -93,8 +114,9 @@
     (html
      (side-bar)
      [:div#main
-      [:h2 "Welcome"]
-      [:p "Welcome"]])]))
+      [:h2 "Hi There"]
+      [:p "You must login with a Google or OpenID account to continue."]
+      [:p "If you are unable to login, please <a href="#">register</a> for a new account."]])]))
 
 (defpartial error-item [[first-error]]
   [:p.error first-error])
