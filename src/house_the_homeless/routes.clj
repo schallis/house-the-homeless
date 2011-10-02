@@ -267,8 +267,6 @@
           (let [clients (get-clients)]
             (html
              [:p (link-to "/client/new" "Add new client")]
-             (if (empty? clients)
-               "There are no clients"
                (html
                 [:table.tabular
                  [:thead
@@ -286,28 +284,46 @@
                            [:td (colourise-stays
                                  (get-stays-count (ds/key-id %))
                                  settings/default-max-stay)]])
-                   clients)]]))))))
+                   clients)]])))))
 
 (defpage "/stays" []
   (admin-only
    (layout "Stays"
            (let [stays (get-stays)]
-             (if (empty? stays)
-               "Noone has stayed yet"
-               (html
-                [:table.tabular
-                 [:thead
-                  [:tr.heading
-                   [:td "Date"]
-                   [:td "Status"]
-                   [:td "Client ID"]]]
-                 [:tbody
-                  (map
-                   #(html [:tr
-                           [:td (:date %)]
-                           [:td (:status %)]
-                           [:td (:client-id %)]])
-                   stays)]]))))))
+             (html
+              [:table.tabular
+               [:thead
+                [:tr.heading
+                 [:td "Date"]
+                 [:td "Status"]
+                 [:td "Client ID"]]]
+               [:tbody
+                (map
+                 #(html [:tr
+                         [:td (:date %)]
+                         [:td (:status %)]
+                         [:td (:client-id %)]])
+                 stays)]])))))
+
+(defpage "/stays/tonight" []
+  (admin-only
+   (layout "Staying Tonight"
+           (let [stays (get-stays)]
+             (html
+              [:table.tabular
+               [:thead
+                [:tr.heading
+                 [:td "Date"]
+                 [:td "Status"]
+                 [:td "Name"]]]
+               [:tbody
+                (map
+                 #(html [:tr
+                         [:td (:date %)]
+                         [:td (:status %)]
+                         [:td (link-client
+                               (ds/retrieve Client (:client-id %)))]])
+                 stays)]])))))
 
 (defpage [:POST "/client/:id/stay/new"] {id :id :as form}
   (let [int-id (parse-int id)
@@ -358,14 +374,13 @@
                      [:thead
                       [:tr
                        [:td "Date"]
-                       [:td "Status"]
-                       [:td "Notes"]]]
+                       [:td "Status"]]]
                      [:tbody
                       (map
                        #(html [:tr
                                [:td (:date %)]
-                               [:td (:status %)]
-                               [:td (:notes %)]]) stays)]])]
+                               [:td (link-to "#" (:status %))]
+                               ]) stays)]])]
                   [:div#newstay
                    (form-to [:post (str "/client/" int-id "/stay/new")]
                             [:table.form

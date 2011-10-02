@@ -11,8 +11,15 @@ window.hth = {
         });
         // for forward and back
         $.address.change(function(event){
-            $("#uitabs").tabs( 
-                "select", window.location.hash
+            $("#uitabs").tabs( {
+                "show": function(event, ui) {
+                    var oTable = $('div.dataTables_scrollBody>table.tabular', ui.panel).dataTable();
+                    if ( oTable.length > 0 ) {
+                        oTable.fnAdjustColumnSizing();
+                    }
+                }
+            }
+                /*"select", window.location.hash*/
             )
         });
         // when the tab is selected update the url with the hash
@@ -26,7 +33,9 @@ window.hth = {
     },
     setupDatatables: function() {
         $('.tabular').dataTable( {
-            "bJQueryUI": true,
+            "sScrollY": "300px",
+            "bScrollCollapse": true,
+            "bPaginate": false,
         });
     }
 };

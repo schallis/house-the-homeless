@@ -26,6 +26,7 @@
         (html
          [:li "Shelter log"
           [:ul
+           [:li (link-to "/stays/tonight" "Tonight")]
            [:li (link-to "/stays" "All Stays")]
            [:li (link-to "/reports" "Reports")]]]
          [:li "Codes"

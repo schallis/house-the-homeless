@@ -187,6 +187,10 @@ table.tabular tr td {
     padding: 0 4px;
 }
 
+.dataTables_scrollBody {
+    border-bottom: 1px solid #ddd;
+}
+
 span.green {
     color: #84cA3A;
 }
@@ -274,9 +278,16 @@ div.actions {
 
 .sorting_1 {
     background: #f6f6f6;
-    border: 1px solid #eee;
 }
 
-table.tabular tr.even {
+thead .sorting_asc, thead .sorting_desc {
+    color: #333;
+}
+
+.even {
     background: #fafafa;
+}
+
+.even > .sorting_1 {
+    background: #f0f0f0;
 }
