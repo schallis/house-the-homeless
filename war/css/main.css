@@ -151,7 +151,6 @@ label {
 }
 
 form select {
-    font-size: 1.25em;
     line-height: 4em;
     vertical-align: middle;
     width: 280px;
@@ -290,4 +289,26 @@ thead .sorting_asc, thead .sorting_desc {
 
 .even > .sorting_1 {
     background: #f0f0f0;
+}
+
+.dataTables_scrollHead  {
+    clear: both;
+}
+
+.ui-datepicker {
+    background: #fff;
+    display: block;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+    display: none;
+}
+
+.ui-datepicker-calendar tr td {
+    border: 1px solid #ddd;
+    padding: 3px;
+}
+
+.ui-datepicker-next {
+    float: right;
 }

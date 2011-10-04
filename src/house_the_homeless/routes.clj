@@ -1,4 +1,5 @@
 (ns house-the-homeless.routes
+  (:refer-clojure :exclude (extend)) 
   (:use [noir.core :only [defpartial defpage render]]
         [hiccup.core :only [html]]
         [hiccup.page-helpers :only [link-to html5 include-css ordered-list
@@ -10,7 +11,9 @@
         [house-the-homeless.utils]
         [house-the-homeless.templates]
         [house-the-homeless.clients]
-        [house-the-homeless.codes])
+        [house-the-homeless.codes]
+        [clj-time.core]
+        [clj-time.format])
   (:require [noir.response :as resp]
             [noir.validation :as vali]
             [noir.session :as sess]
@@ -27,6 +30,14 @@
 
 ;; TEST client pages (non-valid inputs)q
 ;; TEST invalid codes (strings, integers, string-ints, symbols)
+
+(def date-user (formatter "dd/MM/yy"))
+(def date-storage (formatter "dd/MM/yy"))
+
+(defn date-to-user [date]
+  (unparse date-user (parse date-storage date)))
+(defn date-to-storage [date]
+  (unparse date-storage (parse date-user date)))
 
 (ds/defentity Code [^:key content redeemed])
 (ds/defentity Event [^:key content
@@ -305,9 +316,9 @@
                          [:td (:client-id %)]])
                  stays)]])))))
 
-(defpage "/stays/tonight" []
+(defpage "/calendar" []
   (admin-only
-   (layout "Staying Tonight"
+   (layout "Calendar"
            (let [stays (get-stays)]
              (html
               [:table.tabular
@@ -331,7 +342,7 @@
     (if client
       (and
        (ds/save! (Stay.
-                  (:date form)
+                  (unparse date-storage (parse date-user (:date form)))
                   (:status form)
                   (:notes form)
                   int-id))
@@ -378,7 +389,7 @@
                      [:tbody
                       (map
                        #(html [:tr
-                               [:td (:date %)]
+                               [:td (date-to-user (:date %))]
                                [:td (link-to "#" (:status %))]
                                ]) stays)]])]
                   [:div#newstay
@@ -432,7 +443,7 @@
                          (:code form) 
                          (:firstname form)
                          (:lastname form)
-                         (:dob form)
+                         (date-to-storage (:dob form))
                          (:ethnicity form)
                          (:nationality form)
                          (:notes form)

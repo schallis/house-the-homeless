@@ -4,6 +4,9 @@ window.hth = {
         this.setupBrowseTabs();
         this.animateFlash();
         this.setupDatatables();
+        $.datepicker.setDefaults( $.datepicker.regional[ "en-GB" ] );
+        $('#date').datepicker();
+        $('#dob').datepicker();
     },
     setupBrowseTabs: function(event) {
         $('#uitabs').tabs({

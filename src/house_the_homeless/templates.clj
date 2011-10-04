@@ -26,7 +26,7 @@
         (html
          [:li "Shelter log"
           [:ul
-           [:li (link-to "/stays/tonight" "Tonight")]
+           [:li (link-to "/calendar" "Calendar")]
            [:li (link-to "/stays" "All Stays")]
            [:li (link-to "/reports" "Reports")]]]
          [:li "Codes"
@@ -75,8 +75,10 @@
       [:title (str title " - House the Homeless")]
       (include-css "/css/reset.css")
       (include-css "/css/main.css")
+      (include-css "/css/dark-hive/jquery-ui-1.8.16.custom.css")
       (include-js "/js/jquery-1.4.2.min.js")
       (include-js "/js/jquery-ui-1.8.1.custom.min.js")
+      (include-js "/js/jquery.ui.datepicker-en-GB.js")
       (include-js "/js/jquery.address-1.3.min.js")
       (include-js "/js/jquery.dataTables.min.js")
       (include-js "/js/main.js")
@@ -117,7 +119,7 @@
      [:div#main
       [:h2 "Hi There"]
       [:p "You must login with a Google or OpenID account to continue."]
-      [:p "If you are unable to login, please <a href="#">register</a> for a new account."]])]))
+      [:p "If you are unable to login, please <a href=\"https://accounts.google.com/NewAccount\">register</a> for a new account."]])]))
 
 (defpartial error-item [[first-error]]
   [:p.error first-error])
