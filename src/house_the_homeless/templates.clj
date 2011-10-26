@@ -26,7 +26,8 @@
         (html
          [:li "Shelter log"
           [:ul
-           [:li (link-to "/calendar" "Calendar")]
+           [:li (link-to "/calendar/today" "Today")]
+           [:li (link-to "/stay/new" "New Stay")]
            [:li (link-to "/stays" "All Stays")]
            [:li (link-to "/reports" "Reports")]]]
          [:li "Codes"
@@ -46,7 +47,7 @@
       (include-css "/css/main.css")]
      [:body
       [:header [:h1 "Unauthorised"]]
-      [:p "You must log in with an appropriate account before viewing this page"]]))
+      [:p "You must " (link-to (ui/login-url) "log in") " with an appropriate account before viewing this page"]]))
 
 (defpartial not-found []
   (html5

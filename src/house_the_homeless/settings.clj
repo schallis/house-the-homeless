@@ -3,7 +3,11 @@
 (def debug true)
 (def secret-key "asd98&7sd879/00)")
 
+;; The amount of nights one person can stay
 (def default-max-stay 28)
+
+;; The amount of people that can stay 
+(def max-capacity 15)
 
 (def ethnicities
   ["White"
@@ -12,6 +16,10 @@
    "Pan-Asian"
    "Other"])
 
+(def genders
+  ["Male"
+   "Female"])
+
 (def client-statuses
   ["Waiting list" ;; default
    "Not waiting"
@@ -19,6 +27,7 @@
 
 (def stay-statuses
   ["Pending" ;; default
+   "Waiting list"
    "Reserve"
    "Stayed"
    "No Bed"

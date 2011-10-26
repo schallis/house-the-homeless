@@ -109,18 +109,22 @@ div#main {
 }
 
 p.error {
-    color: #f00;
+    color: #c00;
+    width: 262px;
+    padding: 8px;
+    border: 2px solid #c00;
+    border-radius: 8px;
 }
 
 table {
     border-spacing: 0;
 }
 
-table.tabular {
+table.tabular, table.tabular-nojs {
     width: 100%;
 }
 
-table.tabular tr {
+table.tabular tr, table.tabular-nojs tr {
     line-height: 1.6em;
     padding: 5px 0;
 }
@@ -139,7 +143,7 @@ table.form tr td {
     padding: 0;
 }
 
-label, th, table.tabular tr.heading, thead {
+label, th, table.tabular tr.heading, thead, table.tabular-nojs tr.heading {
     text-transform: uppercase;
     font-size: 0.75em;
     color: #aaa;
@@ -180,7 +184,7 @@ input[type='text'], input[type='password'], textarea {
 h3 {
 }
 
-table.tabular tr td {
+table.tabular tr td, table.tabular-nojs tr td {
     border-bottom: 1px solid #ddd;
     line-height: 2.2em;
     padding: 0 4px;
@@ -210,6 +214,12 @@ h1 {
 
 h2 {
     font-size: 1.6em;
+    font-weight: bold;
+    margin-bottom: 0.4em;
+}
+
+h3 {
+    font-size: 1.25em;
     font-weight: bold;
     margin-bottom: 0.4em;
 }
@@ -296,6 +306,7 @@ thead .sorting_asc, thead .sorting_desc {
 }
 
 .ui-datepicker {
+    box-shadow: 0 0 10px #ccc;
     background: #fff;
     display: block;
     border: 1px solid #ddd;

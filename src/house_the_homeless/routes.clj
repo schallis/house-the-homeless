@@ -28,7 +28,7 @@
 ;; TODO make hash more unique
 ;; TODO check security of all pages for logged in and non-admin users
 
-;; TEST client pages (non-valid inputs)q
+;; TEST client pages (non-valid inputs)
 ;; TEST invalid codes (strings, integers, string-ints, symbols)
 
 (def date-user (formatter "dd/MM/yy"))
@@ -38,6 +38,12 @@
   (unparse date-user (parse date-storage date)))
 (defn date-to-storage [date]
   (unparse date-storage (parse date-user date)))
+(defn datetime-to-storage [datetime]
+  (unparse date-storage datetime))
+
+(defn parse-date [date]
+  "Takes a date string and validates it, returning a new date string"
+  (date-to-storage (date-to-user date)))
 
 (ds/defentity Code [^:key content redeemed])
 (ds/defentity Event [^:key content
@@ -53,6 +59,7 @@
                       nationality
                       ni-number
                       notes
+                      gender
                       ;; home-number
                       ;; mobile-number
                       ;; email
@@ -63,7 +70,9 @@
 (ds/defentity Stay [date
                     status
                     notes
-                    client-id])
+                    client-id
+                    confirmed
+                    staying-tomorrow])
 
 (defn stay-template [stay]
   (:status stay))
@@ -87,6 +96,10 @@
                    :filter (= :creator (current-user-email)))
          (catch Exception e nil))))
 
+(defn get-clients-dropdown []
+  "Return a list of clients in a format suitable for a dropdown"
+  (conj (map #(vector (full-name %) (:id %)) (get-clients)) ["---" "default"]))
+
 (defn get-clients-count []
   "Return the number of clients"
   (if (is-admin?)
@@ -103,6 +116,28 @@
     (ds/query :kind Stay)
     (ds/query :kind Stay
               :filter (= :client-id client-id))))
+
+(defn get-stay [pk]
+  ;; TODO handle appropriately when pk is nil
+  "Return a stay with the specified pk"
+  (ds/retrieve Stay pk))
+
+(defn get-stays-by-date
+  ([date confirmed]
+     "Return a list of stays for a particular date, unformatted"
+     (if confirmed
+       (ds/query :kind Stay
+                 :filter ((= :date date)
+                          (= :confirmed (str confirmed))))
+       (ds/query :kind Stay
+                 :filter ((= :date date)
+                          (!= :confirmed "true")))))
+  ([date confirmed count-only?]
+      "Return a count of the stays for a particular date"
+      (ds/query :kind Stay
+                :count-only? true
+                :filter ((= :date date)
+                         (= :confirmed (str confirmed))))))
 
 (defn get-stays-count [& [client-id]]
   "Return the number of stays for a client"
@@ -142,7 +177,8 @@
 ;;                       ni-number
 ;;                       case-notes
 
-(defpartial user-fields [{:keys [firstname lastname dob ethnicity
+(defpartial user-fields [{:keys [firstname lastname dob gender
+                                 ethnicity
                                  nationality ni-number notes]}]
   ;; Print out the fields two per line
   (map #(rowify (first %) (second %))
@@ -158,6 +194,10 @@
                         (vali/on-error :dob error-item)
                         (label "dob" "Date of Birth:")
                         (text-field "dob" dob)]
+                       [:td
+                        (vali/on-error :gender error-item)
+                        (label "gender" "Gender:")
+                        (drop-down "gender" settings/genders gender)]
                        [:td
                         (vali/on-error :ethnicity error-item)
                         (label "dob" "Ethnicity:")
@@ -175,15 +215,27 @@
                         (label "notes" "Notes")
                         (text-area "notes" notes)]])))
 
-(defpartial stay-fields [{:keys [date status notes]}]
+(defpartial stay-fields [{:keys [client-id date status confirmed staying-tomorrow notes]}]
   (map #(rowify (first %) (second %))
        (partition-all 2
-                      [[:td (vali/on-error :date error-item)
+                      [[:td
+                        (vali/on-error :client-id error-item)
+                        (label "client-id" "Client:")
+                        (drop-down
+                         "client-id"
+                         (get-clients-dropdown) (str client-id))]
+                       [:td (vali/on-error :date error-item)
                         (label "date" "Date:")
                         (text-field "date" date)]
                        [:td (vali/on-error :status status)
                         (label "status" "Status:")
                         (drop-down "status" settings/stay-statuses status)]
+                       [:td (vali/on-error :confirmed error-item)
+                        (label "confirmed" "Confirmed?")
+                        (check-box "confirmed" confirmed)]
+                       [:td (vali/on-error :staying-tomorrow error-item)
+                        (label "staying-tomorrow" "Staying tomorrow?")
+                        (check-box "staying-tomorrow" staying-tomorrow)]
                        [:td (vali/on-error :notes notes)
                         (label "notes" "Notes:")
                         (text-area "notes" notes)]])))
@@ -194,7 +246,7 @@
         (label "terms" (str "I accept the " (html (link-to "/terms" "terms and contitions"))))
         (check-box "terms" terms)]])
 
-(defn valid-client? [{:keys [code firstname lastname dob terms]}]
+(defn valid-client? [{:keys [code firstname lastname dob gender terms]}]
   (if (not (is-admin?))
     (loop []
       ;; TODO check for valid format
@@ -208,18 +260,37 @@
                  [:terms "You must accept the terms and conditions"])))
   (vali/rule (vali/has-value? firstname)
              [:firstname "Your must supply a first name"])
+  (vali/rule (vali/has-value? gender)
+             [:gender "Your must supply a gender"])
   (vali/rule (vali/has-value? lastname)
              [:lastname "You must supply a last name"])
   (vali/rule (vali/has-value? dob)
              [:dob "You must supply a date of birth"])
-  (not (vali/errors? :code :lastname :firstname :dob :terms)))
+  (not (vali/errors? :code :lastname :firstname :dob :gender :terms)))
 
-(defn valid-stay? [{:keys [date status]}]
+(defn valid-stay? [{:keys [client-id date status confirmed staying-tomorrow notes]}]
+  (vali/rule (vali/has-value? client-id)
+             [:client-id "You must supply a client-id"])
+  (vali/rule (not (= client-id "default"))
+             [:client-id "You must select a client"])
   (vali/rule (vali/has-value? date)
              [:date "You must supply a date"])
+  ;; TODO! Check for duplicate bookings
+  ;; (if (and (= confirmed "true")
+  ;;          (vali/has-value? date))
+  ;;   (vali/rule (= (get-stays-by-date (parse-date date) true true ) 0)))
+  ;; Check there is capacity
+  (if (and (= confirmed "true")
+           (vali/has-value? date))
+    (vali/rule (< (get-stays-by-date (parse-date date) true true)
+                   settings/max-capacity)
+               [:confirmed (str "There are already "
+                                settings/max-capacity
+                                " people confirmed for "
+                                date)]))
   (vali/rule (vali/has-value? status)
              [:status "You must supply a valid status"])
-  (not (vali/errors? :date :status)))
+  (not (vali/errors? :client-id :date :status :confirmed :staying-tomorrow :notes)))
 
 ;;
 ;;
@@ -306,54 +377,114 @@
                [:thead
                 [:tr.heading
                  [:td "Date"]
+                 [:td "Confirmed"]
+                 [:td "Staying tomorrow"]
                  [:td "Status"]
                  [:td "Client ID"]]]
                [:tbody
                 (map
                  #(html [:tr
                          [:td (:date %)]
+                         [:td (:confirmed %)]
+                         [:td (:staying-tomorrow %)]
                          [:td (:status %)]
                          [:td (:client-id %)]])
                  stays)]])))))
 
-(defpage "/calendar" []
-  (admin-only
-   (layout "Calendar"
-           (let [stays (get-stays)]
-             (html
-              [:table.tabular
-               [:thead
-                [:tr.heading
-                 [:td "Date"]
-                 [:td "Status"]
-                 [:td "Name"]]]
-               [:tbody
-                (map
-                 #(html [:tr
-                         [:td (:date %)]
-                         [:td (:status %)]
-                         [:td (link-client
-                               (ds/retrieve Client (:client-id %)))]])
-                 stays)]])))))
+(defpage "/calendar/today" []
+  (resp/redirect (str "/calendar/" (datetime-to-storage (now)))))
 
-(defpage [:POST "/client/:id/stay/new"] {id :id :as form}
-  (let [int-id (parse-int id)
-        client (get-client int-id)]
-    (if client
+(defpage "/calendar/:dd/:mm/:yy" {dd :dd
+                                  mm :mm
+                                  yy :yy}
+  (let [view-date (parse-date (str dd "/" mm "/" yy))]
+    (admin-only
+     (layout "Calendar"
+             (let [stays-confirmed (get-stays-by-date view-date true)
+                   stays-waiting (get-stays-by-date view-date false)]
+               (html
+                (if (and dd mm yy)
+                  [:p "For the day " (str view-date)])
+                [:h3 "Confirmed"]
+                [:table.tabular-nojs
+                 [:thead
+                  [:tr.heading
+                   [:td "Status"]
+                   [:td "Name"]
+                   [:td "Gender"]
+                   [:td ""]]]
+                 [:tbody
+                  (map
+                   #(let [client (ds/retrieve Client (:client-id %))]
+                      (html [:tr
+                             [:td (:status %)]
+                             [:td (link-client client)]
+                             [:td (:gender client)]
+                             [:td (link-to (str "/stay/edit/" (ds/key-id %)) "Edit")]]))
+                            stays-confirmed)]]
+                [:h3 "Waiting list"]
+                [:table.tabular-nojs
+                 [:thead
+                  [:tr.heading
+                   [:td "Status"]
+                   [:td "Name"]
+                   [:td "Gender"]]]
+                 [:tbody
+                  (map
+                   #(let [client (ds/retrieve Client (:client-id %))]
+                   (html [:tr
+                           [:td (:status %)]
+                           [:td (link-client
+                                 (ds/retrieve Client (:client-id %)))]
+                           [:td (:gender client)]]))
+                   stays-waiting)]]))))))
+
+(defpage [:GET "/stay/edit/:id"] {id :id :keys [posted] :as env}
+  (let [stay-id (parse-int id)
+        stay (get-stay stay-id)]
+    (layout "Edit Stay"
+            (form-to [:post (str "/stay/edit/" stay-id)]
+                     [:table.form
+                      (stay-fields stay)
+                      [:tr [:td (submit-button "Save stay")]]]))))
+
+(defpage [:POST "/stay/edit/:id"] {id :id :as form}
+  (let [stay-id (parse-int id)
+        stay (get-stay stay-id)]
+    (if (valid-stay? form)
       (and
-       (ds/save! (Stay.
-                  (unparse date-storage (parse date-user (:date form)))
-                  (:status form)
-                  (:notes form)
-                  int-id))
-       (sess/flash-put! "Stay created successfully")
-       (resp/redirect (str "/client/edit/" int-id "#stays")))
-      (render "/client-not-found"))))
+       (ds/save! form)
+       (sess/flash-put! "Stay updated successfully")
+       (resp/redirect (str "/stay/edit/" stay-id)))
+      (and
+       (sess/flash-put! "There were errors in the form")
+       (render "/stay/edit/:id" (assoc form :posted 'true))))))
+
+(defpage [:GET "/stay/new"] {:keys [posted] :as env}
+  (layout "New Stay"
+          (form-to [:post (str "/stay/new")]
+                   [:table.form
+                    (stay-fields env)
+                    [:tr [:td (submit-button "Save stay")]]])))
+
+(defpage [:POST "/stay/new"] {:as form}
+  (if (valid-stay? form)
+    (and
+     (ds/save! (Stay.
+                (unparse date-storage (parse date-user (:date form)))
+                (:status form)
+                (:notes form)
+                (parse-int (:client-id form))
+                (:confirmed form)
+                (:staying-tomorrow form)))
+     (sess/flash-put! "Stay created successfully")
+     (resp/redirect (str "/calendar/" (:date form))))
+    (render "/stay/new" (assoc form :posted 'true))))
 
 (defpage [:GET "/client/edit/:id"] {:keys [posted id] :as env}
   (let [int-id (parse-int id)
         client (if (not posted)
-                 (ds/retrieve Client int-id)
+                 (get-client int-id)
                  env)
         stays (get-stays int-id)]
     (if client
@@ -373,7 +504,8 @@
                           [:tr
                            [:td
                             (label "status" "Status:")
-                            (drop-down "status" settings/client-statuses (:status client))]]
+                            (drop-down "status"
+                                       settings/client-statuses (:status client))]]
                           (user-fields client)
                           [:tr [:td
                                 (submit-button "Save")]]])]
@@ -393,9 +525,9 @@
                                [:td (link-to "#" (:status %))]
                                ]) stays)]])]
                   [:div#newstay
-                   (form-to [:post (str "/client/" int-id "/stay/new")]
+                   (form-to [:post (str "/stay/new")]
                             [:table.form
-                             (stay-fields env)
+                             (stay-fields (assoc env :client-id int-id))
                              [:tr [:td (submit-button "Add stay")]]])]
                   [:div#metadata
                    [:p (str "Referred by " (:creator client))]
@@ -404,7 +536,7 @@
 
 (defpage [:POST "/client/edit/:id"] {id :id :as form}
   (let [int-id (parse-int id)
-        client (ds/retrieve Client int-id)]
+        client (get-client int-id)]
     (if (valid-client? (assoc form :code settings/secret-key :terms "true"))
       (and
        (ds/save! (conj client form {:last-modifier (current-user-email)}))
@@ -447,6 +579,7 @@
                          (:ethnicity form)
                          (:nationality form)
                          (:notes form)
+                         (:gender form)
                          (:ni-number form)
                          (:terms form)))
       (sess/flash-put! "Client created successfully")

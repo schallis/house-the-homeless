@@ -31,7 +31,8 @@ window.hth = {
         })
     },
     animateFlash: function() {
-        var flash = $('#flash');
+        $('#flash').hide()
+        $('#flash').fadeIn(1500);
         window.setTimeout("$('#flash').slideUp()", 5000);
     },
     setupDatatables: function() {
