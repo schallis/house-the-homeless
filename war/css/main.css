@@ -56,50 +56,11 @@ header {
     display: block;
 }
 
-div#sidebar {
-    display: block;
-    float: left;
-    width: 200px;
-    background: #000;
-    border-radius: 5px;
-    margin: 0 20px 20px 0;
-}
-
-div#sidebar > ul {
-    padding: 4px 4px 0 4px;
-    
-}
-
-div#sidebar > ul > li {
-    background: #444;
-    border-radius: 3px;
-    margin-bottom: 4px;
-    color: #fff;
-    font-size: 0.85em;
-    padding: 4px;
-}
-
-div#sidebar > ul > li a {
-    color: #fff;
-}
-
-
-div#sidebar > ul > li > ul > li {
-    background: #4183C4;
-    border-radius: 3px;
-    padding: 4px;
-    margin-top: 4px;
-}
-
-div#sidebar > ul > li > ul > li > a {
-    display: block;
-}
-
 div#main {
     position: relative;
     display: block;
     float: left;
-    width: 600px;
+    width: 900px;
     background: #fff;
     -webkit-border-radius: 5px;
     border-width: 1px;
@@ -129,6 +90,7 @@ table.tabular tr, table.tabular-nojs tr {
     padding: 5px 0;
 }
 
+
 table.form tr {
     padding: 8px 0 10px 0;
     display: block;
@@ -136,7 +98,7 @@ table.form tr {
 }
 
 table.form tr td {
-    width: 300px;
+    width: 450px;
     display: block;
     float: left;
     margin: 0;
@@ -157,7 +119,7 @@ label {
 form select {
     line-height: 4em;
     vertical-align: middle;
-    width: 280px;
+    width: 430px;
 }
 
 input[type='button'], input[type='submit'], a.button {
@@ -178,7 +140,7 @@ input[type='text'], input[type='password'], textarea {
     border-width: 1px;
     border-style: solid;
     border-color: #ccc #ddd #eee #ddd;
-    width: 270px;
+    width: 420px;
 }
 
 h3 {
@@ -187,6 +149,7 @@ h3 {
 table.tabular tr td, table.tabular-nojs tr td {
     border-bottom: 1px solid #ddd;
     line-height: 2.2em;
+    font-size: 0.85em;
     padding: 0 4px;
 }
 
@@ -315,11 +278,120 @@ thead .sorting_asc, thead .sorting_desc {
     display: none;
 }
 
+.ui-datepicker-title {
+    text-align: center;
+}
+
 .ui-datepicker-calendar tr td {
     border: 1px solid #ddd;
     padding: 3px;
+    text-align: center;
 }
 
 .ui-datepicker-next {
     float: right;
+}
+
+.ui-datepicker-today {
+    background: #eee;
+}
+
+.ui-datepicker-current-day {
+    background: #CAE1FF;
+}
+
+.ui-datepicker-inline {
+    display: block;
+    border: none;
+    box-shadow: none;
+}
+
+.ui-datepicker-inline .ui-datepicker-calendar {
+    width: 100%;
+}
+
+.ui-datepicker-inline .ui-datepicker-calendar tr td {
+    border: 3px solid #444;
+    padding: 3px;
+    background: #4183C4;
+}
+
+.ui-datepicker-inline a {
+    color: #fff;
+}
+
+.ui-datepicker-inline .ui-datepicker-unselectable {
+    background: #555 !important;
+}
+
+td.shaded, #coordinator {
+    background-color: #eee;
+}
+
+.printout-info {
+    padding: 6px;
+    border: 3px solid #555;
+    display: block;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 0.85em;
+    margin: 0 auto;
+}
+
+span.center {
+    display: block;
+    text-align: center;
+}
+
+.printonly {
+    display: none;
+}
+
+.comment-box {
+    width: 180px;
+    overflow: wrap;
+}
+
+#notes {
+    height: 100px;
+}
+
+
+div#sidebar {
+    display: block;
+    float: left;
+    width: 210px;
+    background: #000;
+    border-radius: 5px;
+    margin: 0 20px 20px 0;
+}
+
+div#sidebar > ul {
+    padding: 4px 4px 0 4px;
+    
+}
+
+div#sidebar > ul > li, .ui-datepicker-inline {
+    background: #444;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    color: #fff;
+    font-size: 0.85em;
+    padding: 4px;
+}
+
+div#sidebar > ul > li a {
+    color: #fff;
+}
+
+
+div#sidebar > ul > li > ul > li {
+    background: #4183C4;
+    border-radius: 3px;
+    padding: 4px;
+    margin-top: 4px;
+}
+
+div#sidebar > ul > li > ul > li > a {
+    display: block;
 }

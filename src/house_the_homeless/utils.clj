@@ -40,6 +40,10 @@
 
 (defn rowify [a b] [:tr a b])
 
+(defn two-col [fields]
+  (map #(rowify (first %) (second %))
+       (partition-all 2 fields)))
+
 (defn colourise-stays
   "Return a colour formatted integer based on whether the number of
   allowed days has been exceeded"

@@ -1,6 +1,6 @@
 (ns house-the-homeless.templates
   (:use [noir.core :only [defpartial render]]
-        [hiccup.core :only [html]]
+        [hiccup.core :only [html resolve-uri]]
         [hiccup.page-helpers :only [link-to html5 include-css include-js ordered-list]]
         [hiccup.form-helpers :only [drop-down form-to label submit-button text-field
                                     check-box]]
@@ -10,6 +10,36 @@
         [noir.session :as sess :only [flash-get flash-put!]])
   (:require [house-the-homeless.settings :as settings]
             [appengine-magic.services.user :as ui]))
+
+(defpartial printout-info []
+  [:span.center
+   [:div.printout-info.printonly
+    [:h3 "Important information for volunteers"]
+    [:p
+     "The confirmed list below and numbers 1-3 on the waiting list are
+    asked to come to the venue for 7pm & wait outside "
+    [:u "(volunteers to give tea, coffee and biscuits while they
+    wait)."]
+    " Take the logfile and start check-in "
+    [:u "outside"]
+    " the venue at 7:20pm (make sure two people are together doing
+    check-in). Open the doors at 7:30pm to let those you have checked
+    in, in. If one of 1-15 is not present at 7:30pm they lose their
+    bed to any of the following that might be waiting: 1, 2 or 3 (in
+    that order). If a confirmed name for example does not turn up till
+    8pm but 1, 2 or 3 have not arrived yet, then the confirmed name
+    can take their bed as it is still empty. Please tell him/her off
+    though for being late. Do not let anyone from the waiting list
+    into the building until they are guaranteed a bed (continue to
+    offer them hot drinks outside). Once 15 spaces are checked-in,
+    those remaining on the waiting list are asked to elave the church
+    area. If someone from the top 15 comes late to find they have lost
+    their bed, please give the person a referral agency map from the
+    log file and explain that the next day they need to go back to one
+    of these agencied to be re-referred back into the shelter. The max
+    stay of any person including days they may or may not be at the
+    shelter is 28 days for 2011/12 seasons. D or E mean Diabetic or
+    Epileptic."]]])
 
 (defpartial side-bar []
   [:div#sidebar
@@ -28,8 +58,8 @@
           [:ul
            [:li (link-to "/calendar/today" "Today")]
            [:li (link-to "/stay/new" "New Stay")]
-           [:li (link-to "/stays" "All Stays")]
-           [:li (link-to "/reports" "Reports")]]]
+           [:li (link-to "/stays" "All Stays")]]]
+         [:div#calendar ""]
          [:li "Codes"
           [:ul
            [:li (link-to "/codes" "All Codes")]
@@ -76,12 +106,18 @@
       [:title (str title " - House the Homeless")]
       (include-css "/css/reset.css")
       (include-css "/css/main.css")
+      (include-css "/css/chosen.css")
+      [:link {:type "text/css",
+              :href (resolve-uri "/css/print.css"),
+              :media "print"
+              :rel "stylesheet"}]
       (include-css "/css/dark-hive/jquery-ui-1.8.16.custom.css")
       (include-js "/js/jquery-1.4.2.min.js")
       (include-js "/js/jquery-ui-1.8.1.custom.min.js")
       (include-js "/js/jquery.ui.datepicker-en-GB.js")
       (include-js "/js/jquery.address-1.3.min.js")
       (include-js "/js/jquery.dataTables.min.js")
+      (include-js "/js/chosen.jquery.min.js")
       (include-js "/js/main.js")
       "<link href='http://fonts.googleapis.com/css?family=Chivo:400' rel='stylesheet' type='text/css'>"
       [:body

@@ -1,0 +1,30 @@
+div#sidebar, h1 {
+    display: none;
+}
+
+
+
+
+table.tabular-nojs {
+    margin-bottom: 200px;
+}
+
+div#main {
+    border: none;
+}
+
+.noprint {
+    display: none;
+}
+
+td.shaded {
+    background-color: #f5f5f5;
+}
+
+.printonly {
+    display: block;
+}
+
+html {
+    background: none;
+}
