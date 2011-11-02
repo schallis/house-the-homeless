@@ -14,7 +14,7 @@ div#main {
 }
 
 .noprint {
-    display: none;
+    display: none !important;
 }
 
 td.shaded {

@@ -1,7 +1,7 @@
 (ns house-the-homeless.routes
   (:refer-clojure :exclude (extend)) 
   (:use [noir.core :only [defpartial defpage render]]
-        [hiccup.core :only [html]]
+        [hiccup.core :only [html resolve-uri]]
         [hiccup.page-helpers :only [link-to html5 include-css ordered-list
                                     unordered-list]]
         [hiccup.form-helpers :only [drop-down form-to label submit-button
@@ -171,7 +171,7 @@
 (defpartial code-field [code]
   [:tr [:td
         (vali/on-error :code error-item)
-        (label "code" "Code: ")
+        (label "code" "Authentication Code: ")
         (text-field "code" code)]])
 
 ;;                       home-number
@@ -197,9 +197,10 @@
                                  no-fixed-abode job-centre
                                  accommodation-year1 accommodation-year2
                                  accommodation-year3 accommodation-year4
-                                 before-growth
+                                 before-growth benefits
                                  normally-sleep
                                  normally-sleep-details
+                                 rough-sleeping squatted
                                  ]}]
   ;; Print out the fields two per line
   [:tr [:td [:h3 "Referring Agency"]]]
@@ -310,10 +311,13 @@
      (check-box "drivers-license" drivers-license)]
     ])
   [:tr [:td [:h3 "State Benefits"]]]
-    [:td
-     (vali/on-error :job-centre error-item)
-     (label "job-centre" "What is the address of your local Job Centre where you sign on?:")
-     (text-field "job-centre" job-centre)]
+  [:tr [:td (vali/on-error :job-centre error-item)
+        (label "job-centre" "What is the address of your local Job Centre where you sign on?:")
+        (text-field "job-centre" job-centre)]]
+  [:tr [:td "Please fill in all state benefits you are receiving (Including " [:b "type, amount received and claim start date"] ")"]]
+  [:tr [:td (vali/on-error :benefits error-item)
+        (label "benefits" "Benefit details:")
+        (text-area "benefits" benefits)]]
   
   [:tr [:td
         [:h3 "Housing"]
@@ -342,11 +346,17 @@
      (text-field "before-growth" before-growth)]])
   (two-col
    [[:td (vali/on-error :normally-sleep error-item)
-     (label "" "Where do you normally sleep:")
+     (label "normally-sleep" "Where do you normally sleep:")
      (drop-down "normally-sleep" settings/normally-sleep normally-sleep)]
     [:td (vali/on-error :normally-sleep-details error-item)
      (label "normally-sleep-details" "Details:")
      (text-field "normally-sleep-details" normally-sleep-details)]
+    [:td (vali/on-error :rough-sleeping error-item)
+     (label "rough-sleeping" "If you have been rough sleeping, how long have you been doing so?:")
+     (text-field "rough-sleeping" rough-sleeping)]
+    [:td (vali/on-error :squatted error-item)
+     (label "squatted" "Have you ever squatted?:")
+     (check-box "squatted" squatted)]
     ])
   [:tr [:td [:h3 "Assistance from other services"]]]
   [:tr [:td [:h3 "Physical health"]]]
@@ -577,9 +587,9 @@
                 (if (and dd mm yy)
                   [:p "For the day " (str view-date)
                    " (" (user-day-of-week view-date) ")"])
+                [:a.print-button.noprint.button {:href (resolve-uri "javascript:window.print()")} "Print"]
                 [:h2.printonly "15 guests - MAXIMUM. Do not sleep more."]
-                [:p.noprint (link-to "/stay/new" "Add new stay") " -  "
-                 (link-to "javascript:window.print()" "Print")]
+                [:p.noprint (link-to (str "/stay/new?date=" view-date) "Add new stay")]
                 [:table.form
                  (day-fields day)]
                 [:br]
@@ -655,7 +665,7 @@
         stay (get-stay stay-id)]
     (layout "Edit Stay"
             (form-to [:post (str "/stay/edit/" stay-id)]
-                     [:table.form
+                     [:table.form.chosen
                       (stay-fields stay)
                       [:tr [:td (submit-button "Save stay") " or " (link-to "javascript:history.back()" "Cancel")]]]))))
 
@@ -681,7 +691,7 @@
 (defpage [:GET "/stay/new"] {:keys [posted] :as env}
   (layout "New Stay"
           (form-to [:post (str "/stay/new")]
-                   [:table.form.stay
+                   [:table.form.chosen
                     (stay-fields env)
                     [:tr [:td (submit-button "Save stay")]]])))
 
@@ -720,7 +730,7 @@
                    [:li (link-to "#metadata" "Metadata")]))]
                [:div#details
                 (form-to [:post (str "/client/edit/" int-id)]
-                         [:table.form
+                         [:table.form.chosen
                           [:tr
                            [:td
                             (label "status" "Status:")
@@ -791,7 +801,7 @@
 (defpage [:GET "/client/new"] {:keys [terms code] :as client}
   (layout "New Client"
           (form-to [:post "/client/new"]
-                   [:table.form
+                   [:table.form.chosen
                     (if (not (is-admin?))
                       (code-field code))
                     (user-fields client)
@@ -811,21 +821,10 @@
         ;; horrible secret-key hack
         (let [code (ds/retrieve Code (parse-int (:code form)))]
           (ds/save! (conj code {:redeemed "Yes"}))))
-      (ds/save! (Client. (first settings/client-statuses)
-                         (current-user-email)
-                         (current-user-email)
-                         (:code form) 
-                         (:firstname form)
-                         (:lastname form)
-                         (date-to-storage (:dob form))
-                         (:ethnicity form)
-                         (:nationality form)
-                         (:notes form)
-                         (:gender form)
-                         (:ni-number form)
-                         (:diabetic form)
-                         (:epileptic form)
-                         (:terms form)))
+      ;; Save the raw form with some fields added/overwritten
+      (let [client (ds/new* Client {:creator (current-user-email)
+                                    :last-modifier (current-user-email)})]
+        (ds/save! (assoc (conj client form) :dob (date-to-storage (:dob form)))))
       (sess/flash-put! "Client created successfully")
       (layout "New Client"
               [:p (str "Success!")]

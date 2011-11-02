@@ -71,7 +71,7 @@ div#main {
 
 p.error {
     color: #c00;
-    width: 262px;
+    width: 412px;
     padding: 8px;
     border: 2px solid #c00;
     border-radius: 8px;
@@ -123,7 +123,7 @@ form select {
 }
 
 input[type='button'], input[type='submit'], a.button {
-    display:inline-block;height:28px;padding:0 10px 0 10px;font-size:0.875em;font-weight:bold;color:#333;text-shadow:1px 1px 0 #fff;white-space:nowrap;border:none;overflow:visible;cursor:pointer;border:1px solid #d4d4d4;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;background:#f4f4f4;filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#f4f4f4',endColorstr='#ececec');background:-webkit-gradient(linear,left top,left bottom,from(#f4f4f4),to(#ececec));background:-moz-linear-gradient(top,#f4f4f4,#ececec);
+    display:inline-block;height:28px;padding:0 10px 0 10px;font-size:0.875em;font-weight:bold;color:#333;text-shadow:1px 1px 0 #fff;white-space:nowrap;border:none;overflow:visible;cursor:pointer;border:1px solid #d4d4d4;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;background:#f4f4f4;filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#f4f4f4',endColorstr='#ececec');background:-webkit-gradient(linear,left top,left bottom,from(#f4f4f4),to(#ececec));background:-moz-linear-gradient(top,#f4f4f4,#ececec); line-height: 28px;
 }
 
 input[type='button']:hover, input[type='submit']:hover, a.button:hover {
@@ -141,6 +141,10 @@ input[type='text'], input[type='password'], textarea {
     border-style: solid;
     border-color: #ccc #ddd #eee #ddd;
     width: 420px;
+}
+
+textarea {
+    height: 100px;
 }
 
 h3 {
@@ -394,4 +398,10 @@ div#sidebar > ul > li > ul > li {
 
 div#sidebar > ul > li > ul > li > a {
     display: block;
+}
+
+.print-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
 }

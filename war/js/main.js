@@ -5,10 +5,7 @@ window.hth = {
     this.animateFlash();
     this.setupDatatables();
     this.setupChosen();
-    this.setupCalendar();
-    $.datepicker.setDefaults( $.datepicker.regional[ "en-GB" ] );
-    $('#date').datepicker();
-    $('#dob').datepicker();
+    this.setupCalendars();
   },
   setupBrowseTabs: function(event) {
     $('#uitabs').tabs({
@@ -23,9 +20,7 @@ window.hth = {
             oTable.fnAdjustColumnSizing();
           }
         }
-      }
-                         /*"select", window.location.hash*/
-                       )
+      })
     });
     // when the tab is selected update the url with the hash
     $("#uitabs").bind("tabsselect", function(event, ui) { 
@@ -45,9 +40,13 @@ window.hth = {
     });
   },
   setupChosen: function() {
-    $('table.stay #client-id').chosen()
+    $('table.chosen select').chosen()
+    //$('select').chosen();
   },
-  setupCalendar: function() {
+  setupCalendars: function() {
+    $.datepicker.setDefaults($.datepicker.regional[ "en-GB" ]);
+    $('#date, #dob').datepicker({dateFormat:'dd/mm/yy'});
+    $('#date, #dob').datepicker( "option", "showAnim", "fadeIn" );
     $('div#calendar').datepicker({
       onSelect: function(dateText, inst) {
         window.location.href = "/calendar/" + dateText;
