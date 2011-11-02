@@ -65,7 +65,58 @@
                       gender
                       diabetic
                       epileptic
-                      terms])
+                      terms
+                      marital-status
+                      agency staff-member
+                      contact-phone tried-thsort
+                      thsort-reason
+                      tried-thhost thhost-reason
+                      mobile-number passport
+                      email right-to-remain
+                      medical-card birth-cert
+                      drivers-license other-id
+                      uk-bank-acc normal-borough
+                      no-fixed-abode job-centre
+                      accommodation-year1 accommodation-year2
+                      accommodation-year3 accommodation-year4
+                      before-growth benefits
+                      normally-sleep
+                      normally-sleep-details
+                      rough-sleeping squatted
+                      met-worker worker-details
+                      secure-tenancy-date
+                      resided-year resided-5year
+                      day-centres day-centres-detail
+                      gp-registered gp-detail
+                      last-gp-visit dietary-reqs
+                      allergies physical-health
+                      mental-history mental-illness
+                      last-mental mental-medication
+                      drink-alcohol
+                      alcohol-units
+                      alcohol-detox
+                      detox-dates
+                      alcohol-help
+                      drug-user
+                      drug-frequency
+                      drug-detox
+                      drug-detox-dates
+                      drugs-help
+                      wanting-work
+                      work-type
+                      profession
+                      last-employment
+                      employment-type
+                      criminal-record
+                      criminal-detail
+                      criminal-common
+                      asylum-date
+                      asylum-remain
+                      asylum-details
+                      armed-forces
+                      other-help
+                      faith
+                      reason-homeless])
 (ds/defentity Stay [date
                     status
                     notes
@@ -80,11 +131,11 @@
 (defn code-issued? 
   "Returns true if the specified code is found in the database"
   [code]
-  (if (parse-int code)
+  (if code
     (> (count
         (ds/query
          :kind Code
-         :filter (= :content (parse-int code))))
+         :filter (= :content code)))
        0)
     'false))
 
@@ -171,15 +222,8 @@
 (defpartial code-field [code]
   [:tr [:td
         (vali/on-error :code error-item)
-        (label "code" "Authentication Code: ")
+        (label "code" "Authentication Code (case sensitive): ")
         (text-field "code" code)]])
-
-;;                       home-number
-;;                       mobile-number
-;;                       email
-;;                       marital-status
-;;                       ni-number
-;;                       case-notes
 
 (defpartial user-fields [{:keys [firstname lastname dob gender
                                  ethnicity marital-status
@@ -201,6 +245,40 @@
                                  normally-sleep
                                  normally-sleep-details
                                  rough-sleeping squatted
+                                 met-worker worker-details
+                                 secure-tenancy-date
+                                 resided-year resided-5year
+                                 day-centres day-centres-detail
+                                 gp-registered gp-detail
+                                 last-gp-visit dietary-reqs
+                                 allergies physical-health
+                                 mental-history mental-illness
+                                 last-mental mental-medication
+                                 drink-alcohol
+                                 alcohol-units
+                                 alcohol-detox
+                                 detox-dates
+                                 alcohol-help
+                                 drug-user
+                                 drug-frequency
+                                 drug-detox
+                                 drug-detox-dates
+                                 drugs-help
+                                 wanting-work
+                                 work-type
+                                 profession
+                                 last-employment
+                                 employment-type
+                                 criminal-record
+                                 criminal-detail
+                                 criminal-common
+                                 asylum-date
+                                 asylum-remain
+                                 asylum-details
+                                 armed-forces
+                                 other-help
+                                 faith
+                                 reason-homeless
                                  ]}]
   ;; Print out the fields two per line
   [:tr [:td [:h3 "Referring Agency"]]]
@@ -284,14 +362,6 @@
      (label "other-id" "Other ID:")
      (text-field "other-id" other-id)]
     [:td
-     (vali/on-error :diabetic error-item)
-     (label "diabetic" "Diabetic:")
-     (check-box "diabetic" diabetic)]
-    [:td
-     (vali/on-error :epileptic error-item)
-     (label "epileptic" "Epileptic:")
-     (check-box "epileptic" epileptic)]
-    [:td
      (vali/on-error :uk-bank-acc error-item)
      (label "uk-bank-acc" "UK bank account:")
      (check-box "uk-bank-acc" uk-bank-acc)]])
@@ -318,7 +388,6 @@
   [:tr [:td (vali/on-error :benefits error-item)
         (label "benefits" "Benefit details:")
         (text-area "benefits" benefits)]]
-  
   [:tr [:td
         [:h3 "Housing"]
         [:p "Please enter the full address (inluding postcode) of accomodation where you resided for each year"]]]
@@ -354,24 +423,178 @@
     [:td (vali/on-error :rough-sleeping error-item)
      (label "rough-sleeping" "If you have been rough sleeping, how long have you been doing so?:")
      (text-field "rough-sleeping" rough-sleeping)]
+    [:td (vali/on-error :secure-tenancy-date error-item)
+     (label "secure-tenancy-date" "When was your last secure tenancy?:")
+     (text-field "secure-tenancy-date" secure-tenancy-date)]
     [:td (vali/on-error :squatted error-item)
      (label "squatted" "Have you ever squatted?:")
      (check-box "squatted" squatted)]
+    [:td (vali/on-error :met-worker error-item)
+     (label "met-worker" "Have you met a worker?:")
+     (check-box "met-worker" met-worker)]
+    [:td (vali/on-error :worker-details error-item)
+     (label "worker-details" "Please detail the name, organisation, date and chain number of the worker you met:")
+     (text-area "worker-details" worker-details)]])
+  [:tr [:td "Have you resided in Tower Hamlets for:"]]
+  (two-col
+    [[:td (vali/on-error :resided-year error-item)
+     (label "resided-year" "6 months out of the last year?:")
+     (check-box "resided-year" resided-year)]
+    [:td (vali/on-error :resided-5year error-item)
+     (label "resided-5year" "3 years out of the last 5 years?:")
+     (check-box "resided-5year" resided-5year)]
     ])
   [:tr [:td [:h3 "Assistance from other services"]]]
+  (two-col
+    [[:td (vali/on-error :day-centres error-item)
+     (label "day-centres" "Which day centres do you regularly visit?:")
+     (text-field "day-centres" day-centres)]
+    [:td (vali/on-error :day-centres-detail error-item)
+     (label "day-centres-detail" "What assistance are you receiving from these day centres? (Please specify the names of staff members):")
+     (text-area "day-centres-detail" day-centres-detail)]
+    ])
   [:tr [:td [:h3 "Physical health"]]]
+  (two-col
+    [[:td (vali/on-error :gp-registered error-item)
+     (label "gp-registered" "Are you registered with a GP?:")
+     (check-box "gp-registered" gp-registered)]
+    [:td (vali/on-error :gp-detail error-item)
+     (label "gp-detail" "Name and address of GP practice:")
+     (text-area "gp-detail" gp-detail)]
+    [:td
+     (vali/on-error :diabetic error-item)
+     (label "diabetic" "Diabetic:")
+     (check-box "diabetic" diabetic)]
+    [:td
+     (vali/on-error :epileptic error-item)
+     (label "epileptic" "Epileptic:")
+     (check-box "epileptic" epileptic)]
+    [:td (vali/on-error :last-gp-visit error-item)
+     (label "last-gp-visit" "When was your last appointment with your GP?:")
+     (text-field "last-gp-visit" last-gp-visit)]
+    [:td (vali/on-error :dietary-reqs error-item)
+     (label "dietary-reqs" "Please specify any dietary requirements:")
+     (text-field "dietary-reqs" dietary-reqs)]
+    [:td (vali/on-error :allergies error-item)
+     (label "allergies" "Please specify any allergies:")
+     (text-field "allergies" allergies)]
+    [:td (vali/on-error :physical-health error-item)
+     (label "physical-health" "Any physical health issues (please detail with dates)?:")
+     (text-area "physical-health" physical-health)]
+    ])
   [:tr [:td [:h3 "Mental health"]]]
+  (two-col
+    [[:td (vali/on-error :mental-history error-item)
+     (label "mental-history" "Do you suffer from or have any history of mental illness?")
+     (check-box "mental-history" mental-history)]
+    [:td (vali/on-error :mental-illness error-item)
+     (label "mental-illness" "Please specify your mental illness:")
+     (check-box "mental-illness" mental-illness)]
+    [:td (vali/on-error :last-mental error-item)
+     (label "last-mental" "When was your last appointment with a psychiatrist, if any?")
+     (text-field "last-mental" last-mental)]
+    [:td (vali/on-error :mental-medication error-item)
+     (label "mental-medication" "Have you been prescribed any medication for your mental illness? (please specify dates):")
+     (text-area "mental-medication" mental-medication)]
+    ])
   [:tr [:td [:h3 "Alcohol use"]]]
+  (two-col
+    [[:td (vali/on-error :drink-alcohol error-item)
+     (label "drunk-alcohol" "Do you drink alcohol?:")
+     (check-box "drink-alcohol" drink-alcohol)]
+    [:td (vali/on-error :alcohol-units error-item)
+     (label "alcohol-units" "How many units of alcohol do you currently drink per day? (1 can of 400ml Carlsberg is 1.8 units):")
+     (drop-down "alcohol-units" (map #(str %) (range 0 71 5)) alcohol-units)]
+    [:td (vali/on-error :alcohol-detox error-item)
+     (label "alcohol-detox" "Have you ever been on an alcohol detox?:")
+     (check-box "alcohol-detox" alcohol-detox)]
+    [:td (vali/on-error :detox-dates error-item)
+     (label "detox-dates" "If so, when?:")
+     (text-field "detox-dates" detox-dates)]
+    [:td (vali/on-error :alcohol-help error-item)
+     (label "alcohol-help" "Are you receiving any help for your alcohol consumption? (Please list any supporting agencies such as an AA group):")
+     (text-field "alcohol-help" alcohol-help)]
+    ])
   [:tr [:td
         [:h3 "Controlled drug use"]
         [:p "Controlled drugs - a controlled drug is a drug or chemical
          whose manufacturer, possession, or use are regulated by a
          government. This includes illegal drugs and prescription
          medications."]]]
+  (two-col
+    [[:td (vali/on-error :drug-user error-item)
+     (label "drug-user" "Do you currently take any controlled drugs (including methadone)?:")
+     (check-box "drug-user" drug-user)]
+    [:td (vali/on-error :drug-frequency error-item)
+     (label "drug-frequency" "At what frequency?:")
+     (text-field "drug-frequency" drug-frequency)]
+    [:td (vali/on-error :alcohol-detox error-item)
+     (label "drug-detox" "Have you ever been on an drug detox?:")
+     (check-box "drug-detox" drug-detox)]
+    [:td (vali/on-error :drug-detox-dates error-item)
+     (label "drug-detox-dates" "If so, when?:")
+     (text-field "drug-detox-dates" drug-detox-dates)]
+    [:td (vali/on-error :drugs-help error-item)
+     (label "drugs-help" "What agencies are you receiving help from regarding you drug use?:")
+     (text-field "drugs-help" drugs-help)]
+    ])
   [:tr [:td [:h3 "Employment"]]]
+  (two-col
+    [[:td (vali/on-error :wanting-work error-item)
+     (label "wanting-work" "Are you wanting to work now?:")
+     (check-box "wanting-work" wanting-work)]
+    [:td (vali/on-error :work-type error-item)
+     (label "work-type" "What type of work are you looking for?:")
+     (text-field "work-type" work-type)]
+    [:td (vali/on-error :profession error-item)
+     (label "profession" "What is your profession/trade(s)?:")
+     (text-field "profession" profession)]
+    [:td (vali/on-error :last-employment error-item)
+     (label "last-employment" "Date of last employment:")
+     (text-field "last-employment" last-employment)]
+    [:td (vali/on-error :employment-type error-item)
+     (label "employment-type" "Type of last employment:")
+     (text-field "employment-type" employment-type)]
+    ])
   [:tr [:td [:h3 "Criminal offences"]]]
+  (two-col
+    [[:td (vali/on-error :criminal-record error-item)
+     (label "criminal-record" "Do you have a criminal record in the UK or overseas?:")
+     (check-box "criminal-record" criminal-record)]
+    [:td (vali/on-error :criminal-detail error-item)
+     (label "criminal-detail" "Please detail the date, offence and time served for any offences:")
+     (text-field "criminal-detail" criminal-detail)]
+    [:td (vali/on-error :criminal-common error-item)
+     (label "criminal-common" "Have you ever been convicted of arson, violence or sexual offences?:")
+     (check-box "criminal-common" criminal-common)]
+    ])
   [:tr [:td [:h3 "For refugees or an asylum seeker only"]]]
+  (two-col
+    [[:td (vali/on-error :asylum-date error-item)
+     (label "asylum-date" "What date did you arrive in the UK?:")
+     (text-field "asylum-date" asylum-date)]
+    [:td (vali/on-error :asylum-remain error-item)
+     (label "asylum-remain" "Do you have indefinite leave to remain (home office papers)?:")
+     (check-box "asylum-remain" asylum-remain)]
+    [:td (vali/on-error :asylum-details error-item)
+     (label "asylum-details" "Are you being supported by the National Asylum Support Service (NASS), a local authority, or friends/relatives? (Please detail):")
+     (check-box "asylum-details" asylum-details)]
+    ])
   [:tr [:td [:h3 "Other"]]]
+  (two-col
+    [[:td (vali/on-error :armed-forces error-item)
+     (label "armed-forces" "Did you serve in the armed forces? (Please specify dates and regiment):")
+     (text-field "armed-forces" armed-forces)]
+    [:td (vali/on-error :other-help error-item)
+     (label "other-help" "Is there any other help you are receiving not notes above?:")
+     (text-field "other-help" other-help)]
+    [:td (vali/on-error :faith error-item)
+     (label "faith" "What faith do you profess to?:")
+     (drop-down "faith" settings/faiths faith)]
+    [:td (vali/on-error :reason-homeless error-item)
+     (label "reason-homeless" "Which of the following would you identify as the primary reason for you becoming homeless?:")
+     (drop-down "reason-homeless" settings/reason-homeless reason-homeless)]
+    ])
   [:tr [:td [:h3 "Project coordinator's notes"]]]
   [:tr [:td
         (vali/on-error :notes error-item)
@@ -410,8 +633,15 @@
 
 (defpartial terms-field [terms]
   [:tr [:td
+        "I agreed that the information from this form can be used to
+compile statistics without reference to my identity. I agree to
+information from this form being used within GrowTH and shared with
+relevant local agencies with the objective of assisting me in finding
+more permanent accommodation or other appropriate assistance regarding
+my needs."]]
+  [:tr [:td
         (vali/on-error :terms error-item)
-        (label "terms" (str "I accept the " (html (link-to "/terms" "terms and contitions"))))
+        (label "terms" (str "I accept the terms and contitions"))
         (check-box "terms" terms)]])
 
 (defpartial day-fields [{:keys [venue coordinator]}]
@@ -426,13 +656,24 @@
                         (label "coordinator" "Coordinator on duty")
                         (text-field "coordinator" coordinator)]])))
 
-(defn valid-client? [{:keys [code firstname lastname dob gender terms]}]
+(defn valid-client? [{:keys [code firstname lastname dob gender terms
+                             agency staff-member contact-phone
+                             thsort-reason thhost-reason
+                             right-to-remain normal-borough
+                             no-fixed-abode job-centre
+                             accommodation-year1 accommodation-year2
+                             accommodation-year3 accommodation-year4
+                             before-growth benefits
+                             normally-sleep normally-sleep-details
+                             rough-sleeping secure-tenancy-date
+                             day-centres day-centres-detail
+                             ]}]
   (if (not (is-admin?))
     (loop []
       ;; TODO check for valid format
       (vali/rule (or (= code settings/secret-key)
-                     (and (parse-int code)
-                          (code-issued? (parse-int code))))
+                     (and code
+                          (code-issued? code)))
                  [:code "That code is not valid"])
       (vali/rule (vali/has-value? code)
                  [:code "You must supply a code"])
@@ -446,7 +687,51 @@
              [:lastname "You must supply a last name"])
   (vali/rule (vali/has-value? dob)
              [:dob "You must supply a date of birth"])
-  (not (vali/errors? :code :lastname :firstname :dob :gender :terms)))
+  (vali/rule (vali/has-value? agency)
+             [:agency "You must supply an agency"])
+  (vali/rule (vali/has-value? staff-member)
+             [:staff-member "You must supply a staff member"])
+  (vali/rule (vali/has-value? contact-phone)
+             [:contact-phone "You must supply a contact phone"])
+  (vali/rule (vali/has-value? thhost-reason)
+             [:thhost-reason "You must supply an outcome or reason"])
+  (vali/rule (vali/has-value? thsort-reason)
+             [:thsort-reason "You must supply an outcome or reason"])
+  (vali/rule (vali/has-value? right-to-remain)
+             [:right-to-remain "You must supply a value"])
+  (vali/rule (vali/has-value? normal-borough)
+             [:normal-borough "You must supply a borough"])
+  (vali/rule (vali/has-value? no-fixed-abode)
+             [:no-fixed-abode "You must supply a value"])
+  (vali/rule (vali/has-value? job-centre)
+             [:job-centre "You must supply a job centre"])
+  (vali/rule (vali/has-value? accommodation-year1)
+             [:accommodation-year1 "You must supply these details"])
+  (vali/rule (vali/has-value? accommodation-year2)
+             [:accommodation-year2 "You must supply these details"])
+  (vali/rule (vali/has-value? accommodation-year3)
+             [:accommodation-year3 "You must supply these details"])
+  (vali/rule (vali/has-value? accommodation-year4)
+             [:accommodation-year4 "You must supply these details"])
+  (vali/rule (vali/has-value? before-growth)
+             [:before-growth "You must supply these details"])
+  (vali/rule (vali/has-value? benefits)
+             [:benefits "You must supply these details"])
+  (vali/rule (vali/has-value? normally-sleep)
+             [:normally-sleep "You must supply these details"])
+  (vali/rule (vali/has-value? normally-sleep-details)
+             [:normally-sleep-details "You must supply these details"])
+  (vali/rule (vali/has-value? rough-sleeping)
+             [:rough-sleeping "You must supply these details"])
+  (vali/rule (vali/has-value? secure-tenancy-date)
+             [:secure-tenancy-date "You must supply these details"])
+  (vali/rule (vali/has-value? day-centres)
+             [:day-centres "You must supply these details"])
+  (vali/rule (vali/has-value? day-centres-detail)
+             [:day-centres-detail "You must supply these details"])
+  (not (vali/errors? :code :lastname :firstname :dob :gender :terms
+                     :agency :staff-member :contact-phone
+                     )))
 
 (defn valid-stay? [{:keys [client-id date status confirmed staying-tomorrow notes]}]
   (vali/rule (vali/has-value? client-id)
@@ -623,7 +908,7 @@
                              [:td (:dob client)]
                              [:td (:agency client)]
                              [:td (if (:diabetic client) "D") (if (:epileptic client) "E")]
-                             [:td (:dietary-requirements client)]
+                             [:td (:dietary-reqs client)]
                              [:td.noprint (link-to (str "/stay/edit/" (ds/key-id %)) "Edit")]]))
                    stays-confirmed)]]
                 [:br]
@@ -819,10 +1104,11 @@
       (if (not (is-admin?))
         ;; TODO figure outbetter way to validate this form to avoid
         ;; horrible secret-key hack
-        (let [code (ds/retrieve Code (parse-int (:code form)))]
+        (let [code (ds/retrieve Code (:code form))]
           (ds/save! (conj code {:redeemed "Yes"}))))
       ;; Save the raw form with some fields added/overwritten
-      (let [client (ds/new* Client {:creator (current-user-email)
+      (let [client (ds/new* Client {:status (first settings/client-statuses)
+                                    :creator (current-user-email)
                                     :last-modifier (current-user-email)})]
         (ds/save! (assoc (conj client form) :dob (date-to-storage (:dob form)))))
       (sess/flash-put! "Client created successfully")

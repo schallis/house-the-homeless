@@ -45,8 +45,9 @@ window.hth = {
   },
   setupCalendars: function() {
     $.datepicker.setDefaults($.datepicker.regional[ "en-GB" ]);
-    $('#date, #dob').datepicker({dateFormat:'dd/mm/yy'});
-    $('#date, #dob').datepicker( "option", "showAnim", "fadeIn" );
+    var dateselector = $('#date, #dob, #secure-tenancy-date, #last-mental, #last-employment, #asylum-date');
+    dateselector.datepicker({dateFormat:'dd/mm/yy'});
+    dateselector.datepicker( "option", "showAnim", "fadeIn" );
     $('div#calendar').datepicker({
       onSelect: function(dateText, inst) {
         window.location.href = "/calendar/" + dateText;

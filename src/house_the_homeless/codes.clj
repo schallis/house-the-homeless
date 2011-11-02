@@ -12,6 +12,6 @@
 
 (defn code-correct-format?
   [code]
-  (if (parse-int code)
+  (if code
     'true
     'false))

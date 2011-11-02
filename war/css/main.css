@@ -72,7 +72,7 @@ div#main {
 p.error {
     color: #c00;
     width: 412px;
-    padding: 8px;
+    padding: 5px 8px;
     border: 2px solid #c00;
     border-radius: 8px;
 }

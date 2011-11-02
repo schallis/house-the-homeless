@@ -30,6 +30,15 @@
    "No"
    "Pending"])
 
+(def reason-homeless
+  ["Upbringing"
+   "Relationship breakdown"
+   "Lack of money"
+   "Gambling"
+   "Bad health"
+   "Drug or alcohol addiction"
+   "Other"])
+
 (def no-fixed-abode
   ["Under 1 week"
    "Under 1 month"
@@ -37,6 +46,16 @@
    "Under 1 year"
    "Under 3 years"
    "More than 3 years"])
+
+(def faiths
+  ["None"
+   "Christian"
+   "Jewish"
+   "Hindu"
+   "Islamic"
+   "Buddhist"
+   "Sikh"
+   "Other"])
 
 (def normally-sleep
   ["Street - which streets?"
