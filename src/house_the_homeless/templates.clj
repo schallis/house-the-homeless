@@ -111,7 +111,6 @@
               :href (resolve-uri "/css/print.css"),
               :media "print"
               :rel "stylesheet"}]
-      (include-css "/css/dark-hive/jquery-ui-1.8.16.custom.css")
       (include-js "/js/jquery-1.4.2.min.js")
       (include-js "/js/jquery-ui-1.8.1.custom.min.js")
       (include-js "/js/jquery.ui.datepicker-en-GB.js")
