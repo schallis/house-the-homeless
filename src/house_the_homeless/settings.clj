@@ -4,7 +4,7 @@
 (def secret-key "asd98&7sd879/00)")
 
 ;; The amount of nights one person can stay
-(def default-max-stay 2)
+(def default-max-stay 28)
 
 ;; The amount of people that can stay 
 (def max-capacity 15)
