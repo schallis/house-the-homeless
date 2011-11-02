@@ -845,15 +845,19 @@ my needs."]]
                  [:td "Confirmed"]
                  [:td "Staying tomorrow"]
                  [:td "Status"]
-                 [:td "Client ID"]]]
+                 [:td "Client ID"]
+                 [:td ""]]]
                [:tbody
                 (map
                  #(html [:tr
-                         [:td (:date %)]
+                         [:td (link-to
+                               (str "/calendar/" (date-to-user (:date %)))
+                               (date-to-user (:date %)))]
                          [:td (:confirmed %)]
                          [:td (:staying-tomorrow %)]
                          [:td (:status %)]
-                         [:td (:client-id %)]])
+                         [:td (:client-id %)]
+                         [:td.noprint (link-to (str "/stay/edit/" (ds/key-id %)) "Edit")]])
                  stays)]])))))
 
 (defpage "/calendar/today" []
@@ -952,7 +956,17 @@ my needs."]]
             (form-to [:post (str "/stay/edit/" stay-id)]
                      [:table.form.chosen
                       (stay-fields stay)
-                      [:tr [:td (submit-button "Save stay") " or " (link-to "javascript:history.back()" "Cancel")]]]))))
+                      [:tr [:td (submit-button "Save stay")
+                            " or "
+                            (link-to "javascript:history.back()" "Cancel")]]])
+            (form-to [:post (str "/stay/delete/" stay-id)]
+                     [:input.delete {:type "submit" :value "Delete"}]))))
+
+(defpage [:POST "/stay/delete/:id"] {id :id :as form}
+  (let [stay (ds/retrieve Stay (parse-int id))]
+    (ds/delete! stay)
+    (sess/flash-put! "Stay deleted successfully")
+    (resp/redirect (str "/calendar/" (:date stay)))))
 
 (defpage [:POST "/stay/edit/:id"] {id :id :as form}
   (let [stay-id (parse-int id)
