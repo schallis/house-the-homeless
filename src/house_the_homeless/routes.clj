@@ -941,7 +941,7 @@ my needs."]]
                              [:td (:dob client)]
                              [:td (:agency client)]
                              [:td (if (:diabetic client) "D") (if (:epileptic client) "E")]
-                             [:td (:dietary-requirements client)]
+                             [:td (:dietary-reqs client)]
                              [:td.noprint (link-to (str "/stay/edit/" (ds/key-id %)) "Edit")]]))
                    stays-waiting)]]))))))
 
@@ -960,7 +960,7 @@ my needs."]]
     (if (valid-stay? form)
       (and
        (ds/save! (conj stay
-                       {:date (:date form)
+                       {:date (date-to-storage (:date form))
                         :status (:status form)
                         :notes (:notes form)
                         :client-id (parse-int (:client-id form))
@@ -984,7 +984,7 @@ my needs."]]
   (if (valid-stay? form)
     (and
      (ds/save! (Stay.
-                (unparse date-storage (parse date-user (:date form)))
+                (date-to-storage (:date form))
                 (:status form)
                 (:notes form)
                 (parse-int (:client-id form))
