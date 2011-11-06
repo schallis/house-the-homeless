@@ -901,6 +901,8 @@ my needs."]]
                    [:td.noprint ""]]]
                  [:tbody
                   (map
+                   ;; TODO check client exists first, otherwise
+                   ;; exception occurs
                    #(let [client (ds/retrieve Client (:client-id %))]
                       (html [:tr
                              ;;[:td (:status %)]

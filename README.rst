@@ -38,3 +38,8 @@ the application::
 By default, the application will be available at `localhost:8080`. Any
 changes and recompilations of the code should be reflected immediately
 in the running application.
+
+Screenshots
+===========
+.. image:: https://github.com/schallis/house-the-homeless/raw/master/screenshots/screenshot-client.png
+.. image:: https://github.com/schallis/house-the-homeless/raw/master/screenshots/screenshot-calendar.png
