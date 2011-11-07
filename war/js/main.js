@@ -6,6 +6,11 @@ window.hth = {
     this.setupDatatables();
     this.setupChosen();
     this.setupCalendars();
+    /* for some reason the datepicker doesn't respect the default
+    locale immediately */
+    window.setTimeout(function() {
+      $("#calendar").datepicker("refresh");
+    }, 10);
   },
   setupBrowseTabs: function(event) {
     $('#uitabs').tabs({
@@ -48,7 +53,8 @@ window.hth = {
     var dateselector = $('#date, #dob, #secure-tenancy-date, #last-mental, #last-employment, #asylum-date');
     dateselector.datepicker({dateFormat:'dd/mm/yy'});
     dateselector.datepicker( "option", "showAnim", "fadeIn" );
-    $('div#calendar').datepicker({
+    var calendarselector = $('div#calendar');
+    calendarselector.datepicker({
       onSelect: function(dateText, inst) {
         window.location.href = "/calendar/" + dateText;
       }
