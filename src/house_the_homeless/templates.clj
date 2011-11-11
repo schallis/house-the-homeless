@@ -121,7 +121,7 @@
       "<link href='http://fonts.googleapis.com/css?family=Chivo:400' rel='stylesheet' type='text/css'>"
       [:body
        [:div#flash (sess/flash-get)]
-       [:header [:h1 "House the Homeless"]]
+       [:header [:h1 settings/site-title]]
        (side-bar)
        (html
         [:div#main
@@ -149,7 +149,7 @@
     (include-css "/css/main.css")
     "<link href='http://fonts.googleapis.com/css?family=Chivo:400' rel='stylesheet' type='text/css'>"]
    [:body
-    [:header [:h1 "House the Homeless"]]
+    [:header [:h1 settings/site-title]]
     (html
      (side-bar)
      [:div#main

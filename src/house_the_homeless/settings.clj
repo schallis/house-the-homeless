@@ -9,6 +9,8 @@
 ;; The amount of people that can stay 
 (def max-capacity 15)
 
+(def site-title "GrowTH Online Referrals")
+
 (def dotw
   ["Monday"
    "Tuesday"
