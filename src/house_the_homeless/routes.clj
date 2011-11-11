@@ -1032,11 +1032,12 @@ my needs."]]
                [:div#details
                 (form-to [:post (str "/client/edit/" int-id)]
                          [:table.form.chosen
-                          [:tr
-                           [:td
-                            (label "status" "Status:")
-                            (drop-down "status"
-                                       settings/client-statuses (:status client))]]
+                          (if (is-admin?)
+                            [:tr
+                             [:td
+                              (label "status" "Status:")
+                              (drop-down "status"
+                                         settings/client-statuses (:status client))]])
                           (user-fields client)
                           [:tr [:td
                                 (submit-button "Save")]]])]
