@@ -6,7 +6,12 @@ div#sidebar, h1 {
 
 
 table.tabular-nojs {
-    margin-bottom: 200px;
+    margin-bottom: 0px;
+}
+
+table.tabular-nojs td {
+    border-left: 1px solid black;
+    border-right: 1px solid black;
 }
 
 div#main {
