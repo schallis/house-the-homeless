@@ -356,7 +356,7 @@
     [:td
      (vali/on-error :email error-item)
      (label "email" "Email:")
-     (text-field "mobile-number" mobile-number)]
+     (text-field "email" email)]
     [:td
      (vali/on-error :other-id error-item)
      (label "other-id" "Other ID:")
