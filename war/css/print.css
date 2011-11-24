@@ -12,7 +12,13 @@ table.tabular-nojs {
 table.tabular-nojs td {
     border-left: 1px solid black;
     border-right: 1px solid black;
+    white-space: nowrap;
 }
+
+table.tabular-nojs tbody {
+    font-size: 0.75em;
+}
+
 
 div#main {
     border: none;
@@ -20,6 +26,7 @@ div#main {
 
 .noprint {
     display: none !important;
+    font-size: 0.85em;
 }
 
 td.shaded {

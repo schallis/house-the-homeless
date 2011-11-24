@@ -39,7 +39,8 @@
     of these agencied to be re-referred back into the shelter. The max
     stay of any person including days they may or may not be at the
     shelter is 28 days for 2011/12 seasons. D or E mean Diabetic or
-    Epileptic."]]])
+    Epileptic. CI means Check in; TU means Turned up and ST means
+    Staying tomorrow."]]])
 
 (defpartial side-bar []
   [:div#sidebar
