@@ -56,8 +56,7 @@ so::
 
      appcfg.py download_data --config_file=config.yaml --filename=client.csv --url=http://house-the-homeless.appspot.com/remote_api --kind=Client --application=s~house-the-homeless
 
-.. note:: The authentication for the application must be set to the
-default Google Auth API for the bulkloader to work.
+*Note*: The authentication for the application must be set to the default Google Auth API for the bulkloader to work.
 
 Screenshots
 ===========
