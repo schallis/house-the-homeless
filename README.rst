@@ -39,6 +39,26 @@ By default, the application will be available at `localhost:8080`. Any
 changes and recompilations of the code should be reflected immediately
 in the running application.
 
+Downloading Data
+================
+
+Data export is performed using the App Engine Python bulkloader
+tools. A remote_api servelet has already been added to the
+application.
+
+To create a config file, run the following command::
+
+    appcfg.py create_bulkloader_config --url=http://house-the-homeless.appspot.com/remote_api --application=s~house-the-homeless --filename=config.yaml
+    
+The config file will need slight tweaking to specify the connector
+preferences but once modified, it can be used to download data like
+so::
+
+     appcfg.py download_data --config_file=config.yaml --filename=client.csv --url=http://house-the-homeless.appspot.com/remote_api --kind=Client --application=s~house-the-homeless
+
+.. note:: The authentication for the application must be set to the
+default Google Auth API for the bulkloader to work.
+
 Screenshots
 ===========
 .. image:: https://github.com/schallis/house-the-homeless/raw/master/screenshots/screenshot-client.png
